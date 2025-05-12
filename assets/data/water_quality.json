@@ -1,0 +1,18 @@
+{
+  "qualityReadings": [
+    {
+      "tankId": "tank001",
+      "timestamp": "2025-04-22T10:30:00Z",
+      "ph": 7.2,
+      "temperature": 18.5,
+      "status": "good"
+    },
+    {
+      "tankId": "tank002",
+      "timestamp": "2025-04-22T10:25:00Z",
+      "ph": 6.8,
+      "temperature": 19.2,
+      "status": "acceptable"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "alerts": [
+    {
+      "id": "alert001",
+      "tankId": "tank002",
+      "type": "low_water_level",
+      "severity": "warning",
+      "message": "Nivel de agua por debajo del umbral recomendado",
+      "timestamp": "2025-04-22T09:45:00Z",
+      "resolved": false,
+      "pumpActivated": true
+    },
+    {
+      "id": "alert002",
+      "tankId": "tank001",
+      "type": "quality_issue",
+      "severity": "info",
+      "message": "Ligero aumento de turbidez detectado",
+      "timestamp": "2025-04-21T14:30:00Z",
+      "resolved": true,
+      "pumpActivated": false
+    }
+  ]
+}

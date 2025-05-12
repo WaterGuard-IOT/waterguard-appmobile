@@ -1,0 +1,55 @@
+name: waterguard
+description: "Waterguard: Control and Care for the Water in Your Home"
+publish_to: 'none' # Elimina esta línea si quieres publicar en pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: "^3.7.2"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  flutter_bloc: ^9.1.1
+  get_it: ^8.0.3
+  provider: ^6.1.2
+
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  dio: ^5.4.1
+  connectivity_plus: ^6.1.4
+
+  flutter_screenutil: ^5.9.0
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.3.1
+  lottie: ^3.0.0
+  fl_chart: ^0.71.0
+
+  flutter_map: ^8.1.1
+
+  intl: ^0.20.2
+  geolocator: ^14.0.0
+  permission_handler: ^12.0.0+1
+
+  faker: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/water_tanks.json
+    - assets/data/water_quality.json
+    - assets/data/historical_levels.json
+    - assets/data/alerts.json
+    - assets/data/users.json

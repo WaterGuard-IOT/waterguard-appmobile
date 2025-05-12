@@ -1,0 +1,30 @@
+{
+  "historicalData": [
+    {
+      "tankId": "tank001",
+      "readings": [
+        {"timestamp": "2025-04-15T10:00:00Z", "level": 4200},
+        {"timestamp": "2025-04-16T10:00:00Z", "level": 4050},
+        {"timestamp": "2025-04-17T10:00:00Z", "level": 3900},
+        {"timestamp": "2025-04-18T10:00:00Z", "level": 3800},
+        {"timestamp": "2025-04-19T10:00:00Z", "level": 4100},
+        {"timestamp": "2025-04-20T10:00:00Z", "level": 3950},
+        {"timestamp": "2025-04-21T10:00:00Z", "level": 3850},
+        {"timestamp": "2025-04-22T10:00:00Z", "level": 3750}
+      ]
+    },
+    {
+      "tankId": "tank002",
+      "readings": [
+        {"timestamp": "2025-04-15T10:00:00Z", "level": 2100},
+        {"timestamp": "2025-04-16T10:00:00Z", "level": 1950},
+        {"timestamp": "2025-04-17T10:00:00Z", "level": 1800},
+        {"timestamp": "2025-04-18T10:00:00Z", "level": 1600},
+        {"timestamp": "2025-04-19T10:00:00Z", "level": 1400},
+        {"timestamp": "2025-04-20T10:00:00Z", "level": 1200},
+        {"timestamp": "2025-04-21T10:00:00Z", "level": 950},
+        {"timestamp": "2025-04-22T10:00:00Z", "level": 750}
+      ]
+    }
+  ]
+}

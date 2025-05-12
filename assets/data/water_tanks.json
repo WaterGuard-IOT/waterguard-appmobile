@@ -1,0 +1,36 @@
+{
+  "tanks": [
+    {
+      "id": "tank001",
+      "name": "Tanque Comunal Principal",
+      "location": {
+        "latitude": -12.0464,
+        "longitude": -77.0428,
+        "address": "Plaza Central, Comunidad San Pedro"
+      },
+      "capacity": 5000,
+      "currentLevel": 3750,
+      "criticalLevel": 1000,
+      "optimalLevel": 4000,
+      "lastUpdated": "2025-04-22T10:30:00Z",
+      "status": "normal",
+      "pumpActive": false
+    },
+    {
+      "id": "tank002",
+      "name": "Tanque Agrícola Norte",
+      "location": {
+        "latitude": -12.0514,
+        "longitude": -77.0389,
+        "address": "Zona de Cultivos Norte, Comunidad San Pedro"
+      },
+      "capacity": 3000,
+      "currentLevel": 750,
+      "criticalLevel": 800,
+      "optimalLevel": 2500,
+      "lastUpdated": "2025-04-22T10:25:00Z",
+      "status": "warning",
+      "pumpActive": true
+    }
+  ]
+}

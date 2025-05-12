@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "user001",
+      "name": "Rosa Mamani",
+      "role": "admin",
+      "email": "rosa.mamani@example.com",
+      "phoneNumber": "+51987654321",
+      "preferredNotifications": ["app", "sms"],
+      "managedTanks": ["tank001", "tank002", "tank003"]
+    },
+    {
+      "id": "user002",
+      "name": "Pedro Quispe",
+      "role": "technician",
+      "email": "pedro.quispe@example.com",
+      "phoneNumber": "+51923456789",
+      "preferredNotifications": ["app", "email"],
+      "managedTanks": ["tank001", "tank002", "tank003"]
+    }
+  ]
+}
