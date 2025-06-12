@@ -363,6 +363,13 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       );
     }).toList();
 
+    // Colores que funcionan en ambos temas
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final lineColor = isDarkMode ? Colors.lightBlue : Colors.blue;
+    final gradientColor = isDarkMode ? Colors.lightBlue.withOpacity(0.3) : Colors.blue.withOpacity(0.2);
+    final gridColor = isDarkMode ? Colors.white24 : Colors.grey.shade300;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -381,16 +388,50 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
           ),
           const SizedBox(height: 16),
 
-          // Gráfico de línea
+          // Gráfico de línea mejorado
           Expanded(
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: true),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: true,
+                  drawHorizontalLine: true,
+                  verticalInterval: 1,
+                  horizontalInterval: state.tank.capacity / 5,
+                  getDrawingVerticalLine: (value) {
+                    return FlLine(
+                      color: gridColor,
+                      strokeWidth: 1,
+                      dashArray: [5, 5],
+                    );
+                  },
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: gridColor,
+                      strokeWidth: 1,
+                      dashArray: [5, 5],
+                    );
+                  },
+                ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
+                      reservedSize: 50,
+                      interval: state.tank.capacity / 5,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Text(
+                            '${value.toInt()}L',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -404,13 +445,17 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               DateFormat('dd/MM').format(date),
-                              style: const TextStyle(fontSize: 10),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: textColor,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           );
                         }
                         return const Text('');
                       },
-                      reservedSize: 30,
+                      reservedSize: 35,
                     ),
                   ),
                   rightTitles: AxisTitles(
@@ -420,22 +465,106 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                     sideTitles: SideTitles(showTitles: false),
                   ),
                 ),
-                borderData: FlBorderData(show: true),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(
+                    color: gridColor,
+                    width: 1,
+                  ),
+                ),
                 minX: 0,
                 maxX: (state.historicalData.length - 1).toDouble(),
                 minY: 0,
-                maxY: state.tank.capacity,
+                maxY: state.tank.capacity * 1.1, // Un poco más para dar espacio
+
+                // Configuración del tooltip mejorado
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => isDarkMode
+                        ? Colors.grey.shade800
+                        : Colors.white,
+                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                      return touchedBarSpots.map((barSpot) {
+                        final flSpot = barSpot;
+                        final dataIndex = flSpot.x.toInt();
+
+                        if (dataIndex >= 0 && dataIndex < state.historicalData.length) {
+                          final data = state.historicalData[dataIndex];
+                          final date = DateTime.parse(data['timestamp']);
+                          final level = flSpot.y;
+
+                          return LineTooltipItem(
+                            '${DateFormat('dd/MM/yyyy').format(date)}\n${level.toInt()} L',
+                            TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          );
+                        }
+                        return null;
+                      }).toList();
+                    },
+                    tooltipBorder: BorderSide(
+                      color: isDarkMode ? Colors.white24 : Colors.grey.shade400,
+                      width: 1,
+                    ),
+                    tooltipRoundedRadius: 8,
+                    tooltipPadding: const EdgeInsets.all(8),
+                  ),
+                  handleBuiltInTouches: true,
+                  getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+                    return spotIndexes.map((spotIndex) {
+                      return TouchedSpotIndicatorData(
+                        FlLine(
+                          color: lineColor,
+                          strokeWidth: 2,
+                          dashArray: [3, 3],
+                        ),
+                        FlDotData(
+                          getDotPainter: (spot, percent, barData, index) {
+                            return FlDotCirclePainter(
+                              radius: 6,
+                              color: Colors.white,
+                              strokeWidth: 3,
+                              strokeColor: lineColor,
+                            );
+                          },
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
-                    color: Theme.of(context).primaryColor,
-                    barWidth: 4,
+                    color: lineColor,
+                    barWidth: 3,
                     isStrokeCapRound: true,
-                    dotData: FlDotData(show: false),
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: lineColor,
+                          strokeWidth: 2,
+                          strokeColor: isDarkMode ? Colors.white : Colors.white,
+                        );
+                      },
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: Theme.of(context).primaryColor.withOpacity(0.2),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          gradientColor,
+                          gradientColor.withOpacity(0.1),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -445,21 +574,52 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
 
           const SizedBox(height: 16),
 
-          // Leyenda
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                color: Theme.of(context).primaryColor,
+          // Leyenda mejorada
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDarkMode ? Colors.white24 : Colors.grey.shade300,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Nivel de agua (L)',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 16,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: lineColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Nivel de agua (L)',
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.touch_app,
+                  size: 16,
+                  color: textColor.withOpacity(0.7),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Toca los puntos para más detalles',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textColor.withOpacity(0.7),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

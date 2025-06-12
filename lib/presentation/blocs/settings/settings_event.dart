@@ -1,3 +1,4 @@
+// lib/presentation/blocs/settings/settings_event.dart
 abstract class SettingsEvent {}
 
 class LoadSettings extends SettingsEvent {}
@@ -27,4 +28,34 @@ class UpdateWaterLevelThresholds extends SettingsEvent {
     required this.criticalPercentage,
     required this.optimalPercentage,
   });
+}
+
+// NUEVOS EVENTOS
+class UpdateUserProfile extends SettingsEvent {
+  final String name;
+  final String phoneNumber;
+
+  UpdateUserProfile({
+    required this.name,
+    required this.phoneNumber,
+  });
+}
+
+class UpdateNotificationSettings extends SettingsEvent {
+  final List<String> preferredNotifications;
+  final bool criticalAlertsOnly;
+
+  UpdateNotificationSettings({
+    required this.preferredNotifications,
+    required this.criticalAlertsOnly,
+  });
+}
+
+class RestoreDefaultSettings extends SettingsEvent {}
+
+// Evento para notificar cambios globales
+class SettingsUpdated extends SettingsEvent {
+  final String settingsType; // 'thresholds', 'profile', 'notifications'
+
+  SettingsUpdated({required this.settingsType});
 }
