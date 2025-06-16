@@ -13,6 +13,11 @@ import 'package:waterguard/domain/repositories/user_repository.dart';
 import 'package:waterguard/domain/repositories/user_settings_repository.dart';
 import 'package:waterguard/domain/repositories/water_quality_repository.dart';
 
+import 'data/repositories/backend_repositories.dart';
+import 'data/services/auth_service.dart';
+import 'data/services/http_service.dart';
+import 'data/services/tank_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -24,9 +29,45 @@ void main() async {
   final mockDataProvider = MockDataProvider();
   await mockDataProvider.init();
 
-  setupDependencies(mockDataProvider);
+  //setupDependencies(mockDataProvider);
+  setupBackendDependencies();
 
   runApp(const WaterGuardApp());
+}
+
+void setupBackendDependencies() {
+  // Servicios HTTP
+  getIt.registerSingleton<HttpService>(HttpService());
+
+  getIt.registerSingleton<AuthService>(
+    AuthService(getIt<HttpService>()),
+  );
+
+  getIt.registerSingleton<TankService>(
+    TankService(getIt<HttpService>()),
+  );
+
+  // Repositorios que se conectan al backend
+  getIt.registerSingleton<UserRepository>(
+    BackendUserRepositoryImpl(authService: getIt<AuthService>()),
+  );
+
+  getIt.registerSingleton<TankRepository>(
+    BackendTankRepositoryImpl(tankService: getIt<TankService>()),
+  );
+
+  getIt.registerSingleton<WaterQualityRepository>(
+    BackendWaterQualityRepositoryImpl(tankService: getIt<TankService>()),
+  );
+
+  getIt.registerSingleton<AlertRepository>(
+    BackendAlertRepositoryImpl(),
+  );
+
+  // Repositorio de configuraciones (sigue usando SharedPreferences)
+  getIt.registerSingleton<UserSettingsRepository>(
+    UserSettingsRepositoryImpl(),
+  );
 }
 
 void setupDependencies(MockDataProvider mockDataProvider) {

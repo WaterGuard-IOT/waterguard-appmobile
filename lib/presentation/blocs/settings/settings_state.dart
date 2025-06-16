@@ -17,3 +17,14 @@ class SettingsError extends SettingsState {
 
   SettingsError(this.message);
 }
+
+// Estado faltante que se usa en settings_bloc.dart
+class SettingsUpdatedSuccessfully extends SettingsState {
+  final String message;
+  final UserSettings settings;
+
+  SettingsUpdatedSuccessfully({
+    required this.message,
+    required this.settings,
+  });
+}
