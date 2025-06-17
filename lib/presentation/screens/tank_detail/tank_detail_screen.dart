@@ -584,39 +584,55 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                 color: isDarkMode ? Colors.white24 : Colors.grey.shade300,
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
               children: [
-                Container(
-                  width: 16,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: lineColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                // Primera fila: Indicador de línea
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: lineColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Nivel de agua (L)',
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Nivel de agua (L)',
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.touch_app,
-                  size: 16,
-                  color: textColor.withOpacity(0.7),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Toca los puntos para más detalles',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: textColor.withOpacity(0.7),
-                    fontStyle: FontStyle.italic,
-                  ),
+                const SizedBox(height: 8),
+                // Segunda fila: Instrucciones de interacción
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.touch_app,
+                      size: 16,
+                      color: textColor.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'Toca los puntos para más detalles',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: textColor.withOpacity(0.7),
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -808,11 +824,11 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
 
   Color _getWaterLevelColor(double percentage) {
     if (percentage < 20) {
-      return Colors.red;
+      return const Color(0xFFF44336); // Rojo crítico
     } else if (percentage < 50) {
-      return Colors.orange;
+      return const Color(0xFFFF9800); // Naranja advertencia
     } else {
-      return Colors.blue;
+      return const Color(0xFF2196F3); // Azul óptimo
     }
   }
 
@@ -820,13 +836,13 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
     switch (status) {
       case 'excellent':
       case 'good':
-        return Colors.green;
+        return const Color(0xFF4CAF50); // Verde bueno
       case 'acceptable':
-        return Colors.orange;
+        return const Color(0xFFFF9800); // Naranja aceptable
       case 'poor':
-        return Colors.red;
+        return const Color(0xFFF44336); // Rojo malo
       default:
-        return Colors.grey;
+        return const Color(0xFF9E9E9E); // Gris desconocido
     }
   }
 
@@ -872,5 +888,11 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       default:
         return 'No hay suficiente información sobre la calidad del agua.';
     }
+  }
+
+  Color _getContrastingTextColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
   }
 }

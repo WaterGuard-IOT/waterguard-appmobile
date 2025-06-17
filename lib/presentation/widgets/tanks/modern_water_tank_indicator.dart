@@ -231,16 +231,18 @@ class _ModernWaterTankIndicatorState extends State<ModernWaterTankIndicator>
             // Indicador de porcentaje
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? Colors.black.withOpacity(0.6)
-                      : Colors.white.withOpacity(0.6),
+                  color: Colors.black.withOpacity(0.7), // Fondo más consistente
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 5,
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -248,16 +250,14 @@ class _ModernWaterTankIndicatorState extends State<ModernWaterTankIndicator>
                 child: Text(
                   "${_currentPercentage.toStringAsFixed(1)}%",
                   style: TextStyle(
-                    color: _currentPercentage > 30 || isDarkMode
-                        ? Colors.white
-                        : Colors.black,
-                    fontSize: min(widget.width / 5, 20),
+                    color: Colors.white, // Siempre blanco para máximo contraste
+                    fontSize: min(widget.width / 5, 18),
                     fontWeight: FontWeight.bold,
                     shadows: [
                       Shadow(
                         offset: const Offset(1, 1),
-                        blurRadius: 2,
-                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 3,
+                        color: Colors.black.withOpacity(0.8),
                       ),
                     ],
                   ),

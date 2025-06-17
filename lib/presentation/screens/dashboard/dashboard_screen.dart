@@ -237,141 +237,234 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTankCard(BuildContext context, Tank tank) {
     final levelPercentage = tank.levelPercentage;
     final statusColor = _getStatusColor(tank.status);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      child: InkWell(
-        onTap: () {
-          // Navegación a la pantalla de detalle del tanque
-          Navigator.of(context).pushNamed(
-            AppRouter.tankDetail,
-            arguments: tank.id,
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      tank.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+      elevation: isDarkMode ? 8 : 4, // Más elevación en modo oscuro
+      shadowColor: isDarkMode
+          ? Colors.black.withOpacity(0.5)
+          : Colors.grey.withOpacity(0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isDarkMode
+              ? Colors.white.withOpacity(0.1)
+              : Colors.transparent,
+          width: 0.5,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: isDarkMode
+              ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.grey.shade800,
+              Colors.grey.shade900,
+            ],
+          )
+              : null,
+        ),
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).pushNamed(
+              AppRouter.tankDetail,
+              arguments: tank.id,
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        tank.name,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : null,
+                        ),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      vertical: 4.0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: statusColor,
-                            shape: BoxShape.circle,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 6.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20.0),
+                        border: Border.all(
+                          color: statusColor.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _getStatusText(tank.status),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(width: 6),
+                          Text(
+                            _getStatusText(tank.status),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nivel de Agua',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${tank.currentLevel.toStringAsFixed(0)} L de ${tank.capacity.toStringAsFixed(0)} L',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: levelPercentage / 100,
-                          backgroundColor: Colors.grey[300],
-                          color: _getWaterLevelColor(levelPercentage),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${levelPercentage.toStringAsFixed(1)}%',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Nivel de Agua',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${tank.currentLevel.toStringAsFixed(0)} L de ${tank.capacity.toStringAsFixed(0)} L',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isDarkMode ? Colors.white : null,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            height: 8,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: isDarkMode
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade300,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: levelPercentage / 100,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getWaterLevelColor(levelPercentage),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${levelPercentage.toStringAsFixed(1)}%',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: _getWaterLevelColor(levelPercentage),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Bomba',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              tank.pumpActive
-                                  ? Icons.power
-                                  : Icons.power_off,
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Bomba',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
                               color: tank.pumpActive
-                                  ? Colors.green
-                                  : Colors.grey,
-                              size: 16,
+                                  ? Colors.green.withOpacity(0.15)
+                                  : Colors.grey.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: tank.pumpActive
+                                    ? Colors.green.withOpacity(0.3)
+                                    : Colors.grey.withOpacity(0.3),
+                                width: 1,
+                              ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              tank.pumpActive ? 'Activa' : 'Inactiva',
-                              style: Theme.of(context).textTheme.titleSmall,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  tank.pumpActive
+                                      ? Icons.power
+                                      : Icons.power_off,
+                                  color: tank.pumpActive
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  tank.pumpActive ? 'Activa' : 'Inactiva',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: tank.pumpActive
+                                        ? Colors.green
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Última act:',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          DateFormat('dd/MM HH:mm').format(tank.lastUpdated),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Última act:',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isDarkMode
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('dd/MM HH:mm').format(tank.lastUpdated),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: isDarkMode ? Colors.white : null,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -381,13 +474,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'normal':
-        return Colors.green;
+        return const Color(0xFF4CAF50); // Verde más consistente
       case 'warning':
-        return Colors.orange;
+        return const Color(0xFFFF9800); // Naranja más visible
       case 'critical':
-        return Colors.red;
+        return const Color(0xFFF44336); // Rojo más consistente
       default:
-        return Colors.grey;
+        return const Color(0xFF9E9E9E); // Gris neutro
     }
   }
 
@@ -406,11 +499,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Color _getWaterLevelColor(double percentage) {
     if (percentage < 20) {
-      return Colors.red;
+      return const Color(0xFFF44336); // Rojo crítico
     } else if (percentage < 50) {
-      return Colors.orange;
+      return const Color(0xFFFF9800); // Naranja advertencia
     } else {
-      return Colors.blue;
+      return const Color(0xFF2196F3); // Azul óptimo
     }
   }
 
@@ -426,4 +519,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Colors.grey;
     }
   }
+
+  Color _getContrastingTextColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
+  }
+
 }
