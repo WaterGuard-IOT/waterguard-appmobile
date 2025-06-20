@@ -21,7 +21,6 @@ import 'package:waterguard/domain/repositories/user_settings_repository.dart';
 import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/presentation/screens/edit_tank/edit_tank_screen.dart'; // Importa la nueva pantalla
 import 'package:waterguard/domain/entities/tank.dart'; // Importa la entidad
-import 'package:waterguard/data/services/tank_service.dart';
 
 import '../../presentation/blocs/tank/tank_event.dart'; // Importa el servicio
 

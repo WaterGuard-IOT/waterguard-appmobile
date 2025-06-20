@@ -1,7 +1,7 @@
 // lib/presentation/screens/add_tank/add_tank_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_bloc.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_event.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_state.dart';
@@ -21,12 +21,14 @@ class _AddTankScreenState extends State<AddTankScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _capacityController = TextEditingController(text: '1000');
+  // --- NUEVA FUNCIONALIDAD: Controlador para nivel actual ---
+  final _currentLevelController = TextEditingController(text: '0');
   final _criticalLevelController = TextEditingController(text: '20');
   final _optimalLevelController = TextEditingController(text: '80');
-  final _addressController = TextEditingController();
 
-  Position? _currentPosition;
-  bool _isFetchingLocation = false;
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
+  final _addressController = TextEditingController();
 
   @override
   void initState() {
@@ -38,33 +40,13 @@ class _AddTankScreenState extends State<AddTankScreen> {
   void dispose() {
     _nameController.dispose();
     _capacityController.dispose();
+    _currentLevelController.dispose();
     _criticalLevelController.dispose();
     _optimalLevelController.dispose();
     _addressController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
-  }
-
-  Future<void> _getCurrentLocation() async {
-    setState(() => _isFetchingLocation = true);
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Permiso de ubicación denegado')));
-          setState(() => _isFetchingLocation = false);
-          return;
-        }
-      }
-      _currentPosition = await Geolocator.getCurrentPosition();
-      _addressController.text = 'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}';
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se pudo obtener la ubicación: $e')));
-    } finally {
-      setState(() => _isFetchingLocation = false);
-    }
   }
 
   @override
@@ -76,7 +58,6 @@ class _AddTankScreenState extends State<AddTankScreen> {
       body: BlocConsumer<AddTankBloc, AddTankState>(
         listener: (context, state) {
           if (state is AddTankSuccess) {
-            // Actualizar dashboard y volver a la pantalla anterior
             context.read<DashboardBloc>().add(RefreshDashboard());
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -139,6 +120,16 @@ class _AddTankScreenState extends State<AddTankScreen> {
               validator: (value) =>
               value!.isEmpty ? 'Ingresa la capacidad' : null,
             ),
+            const SizedBox(height: 16),
+            // --- NUEVA FUNCIONALIDAD: Campo para nivel de agua actual ---
+            _buildTextField(
+              controller: _currentLevelController,
+              label: 'Nivel Actual (Litros)',
+              icon: Icons.waves,
+              keyboardType: TextInputType.number,
+              validator: (value) =>
+              value!.isEmpty ? 'Ingresa el nivel actual' : null,
+            ),
             const SizedBox(height: 24),
             Text('Niveles de Alerta (%)', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
@@ -164,25 +155,48 @@ class _AddTankScreenState extends State<AddTankScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            Text('Ubicación', style: Theme.of(context).textTheme.titleLarge),
+            Text('Ubicación Manual', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _addressController,
-              label: 'Dirección o Coordenadas',
-              icon: Icons.location_on,
+              label: 'Dirección (Ej: Av. Principal 123)',
+              icon: Icons.location_city,
               validator: (value) =>
-              value!.isEmpty ? 'Ingresa la ubicación' : null,
+              value!.isEmpty ? 'Ingresa la dirección' : null,
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isFetchingLocation ? null : _getCurrentLocation,
-                icon: _isFetchingLocation
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.my_location),
-                label: const Text('Usar ubicación actual'),
-              ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _latitudeController,
+                    label: 'Latitud',
+                    icon: Icons.map,
+                    keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*'))],
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Ingresa la latitud';
+                      if (double.tryParse(value) == null) return 'Número inválido';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _longitudeController,
+                    label: 'Longitud',
+                    icon: Icons.map,
+                    keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*'))],
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Ingresa la longitud';
+                      if (double.tryParse(value) == null) return 'Número inválido';
+                      return null;
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
@@ -205,6 +219,7 @@ class _AddTankScreenState extends State<AddTankScreen> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextFormField(
       controller: controller,
@@ -215,6 +230,7 @@ class _AddTankScreenState extends State<AddTankScreen> {
       ),
       keyboardType: keyboardType,
       validator: validator,
+      inputFormatters: inputFormatters,
     );
   }
 
@@ -233,14 +249,17 @@ class _AddTankScreenState extends State<AddTankScreen> {
 
     final tankData = {
       "userId": int.parse(authState.userId),
-      "nombre": _nameController.text,
-      "capacidad": double.parse(_capacityController.text),
-      "nivelCritico": double.parse(_criticalLevelController.text),
-      "nivelOptimo": double.parse(_optimalLevelController.text),
-      "ubicacion": {
-        "latitud": _currentPosition?.latitude ?? 0.0,
-        "longitud": _currentPosition?.longitude ?? 0.0,
-        "direccion": _addressController.text,
+      "name": _nameController.text,
+      "capacity": double.parse(_capacityController.text),
+      "currentLevel": double.parse(_currentLevelController.text), // Enviar el nivel actual
+      "criticalLevel": double.parse(_criticalLevelController.text),
+      "optimalLevel": double.parse(_optimalLevelController.text),
+      "pumpActive": false,
+      "status": "normal",
+      "location": {
+        "latitude": double.tryParse(_latitudeController.text) ?? 0.0,
+        "longitude": double.tryParse(_longitudeController.text) ?? 0.0,
+        "address": _addressController.text,
       }
     };
 

@@ -3,19 +3,23 @@
 abstract class TankEvent {}
 
 class LoadTankDetail extends TankEvent {
-final String tankId;
-LoadTankDetail({required this.tankId});
+  final String tankId;
+  LoadTankDetail({required this.tankId});
 }
 
 class TogglePump extends TankEvent {
-final String tankId;
-final bool active;
-TogglePump({required this.tankId, required this.active});
+  final String tankId;
+  final bool active;
+  TogglePump({required this.tankId, required this.active});
 }
 
-// NUEVO EVENTO: Para actualizar un tanque
 class UpdateTank extends TankEvent {
-final int tankId;
-final Map<String, dynamic> tankData;
-UpdateTank({required this.tankId, required this.tankData});
+  final int tankId;
+  final Map<String, dynamic> tankData;
+  UpdateTank({required this.tankId, required this.tankData});
+}
+
+class DeleteTank extends TankEvent {
+  final int tankId;
+  DeleteTank({required this.tankId});
 }

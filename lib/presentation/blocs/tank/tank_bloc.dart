@@ -2,9 +2,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/domain/repositories/tank_repository.dart';
-import 'package:waterguard/domain/repositories/water_quality_repository.dart';
+import '../../../domain/repositories/water_quality_repository.dart';
 import 'tank_event.dart';
 import 'tank_state.dart';
+import 'package:waterguard/domain/entities/tank.dart';
 
 class TankBloc extends Bloc<TankEvent, TankState> {
   final TankRepository tankRepository;
@@ -19,6 +20,7 @@ class TankBloc extends Bloc<TankEvent, TankState> {
     on<LoadTankDetail>(_onLoadTankDetail);
     on<TogglePump>(_onTogglePump);
     on<UpdateTank>(_onUpdateTank);
+    on<DeleteTank>(_onDeleteTank); // Registrar el nuevo manejador
   }
 
   Future<void> _onLoadTankDetail(
@@ -50,32 +52,55 @@ class TankBloc extends Bloc<TankEvent, TankState> {
       UpdateTank event,
       Emitter<TankState> emit,
       ) async {
-    // Muestra un indicador de carga mientras se guarda
+    if (state is! TankDetailLoaded) return;
     emit(TankLoading());
     try {
-      // Llama al servicio que realiza la petición PUT
       await tankService.updateTank(event.tankId, event.tankData);
-
-      // Emite un estado de éxito para que la UI pueda reaccionar (e.g., mostrar un SnackBar)
       emit(TankUpdateSuccess());
-
-      // Vuelve a cargar los datos del tanque para reflejar los cambios
       add(LoadTankDetail(tankId: event.tankId.toString()));
     } catch (e) {
-      // Si algo falla, emite un estado de error
       emit(TankError('Error al actualizar el tanque: ${e.toString()}'));
     }
   }
 
+  // --- NUEVA FUNCIONALIDAD: Lógica para eliminar el tanque ---
+  Future<void> _onDeleteTank(
+      DeleteTank event,
+      Emitter<TankState> emit,
+      ) async {
+    emit(TankLoading());
+    try {
+      await tankService.deleteTank(event.tankId);
+      emit(TankDeleteSuccess());
+    } catch (e) {
+      emit(TankError('Error al eliminar el tanque: ${e.toString()}'));
+    }
+  }
+
+  // --- LÓGICA MEJORADA: Activar/desactivar la bomba ---
   Future<void> _onTogglePump(
       TogglePump event,
       Emitter<TankState> emit,
       ) async {
-    try {
-      await tankRepository.togglePump(event.tankId, event.active);
-      add(LoadTankDetail(tankId: event.tankId));
-    } catch (e) {
-      emit(TankError('Error al cambiar estado de la bomba: ${e.toString()}'));
-    }
+    // Solo proceder si tenemos los datos del tanque cargados
+    if (state is! TankDetailLoaded) return;
+
+    final currentState = state as TankDetailLoaded;
+    final currentTank = currentState.tank;
+
+    // Crear el payload con el estado de la bomba actualizado
+    final updatedData = {
+      "name": currentTank.name,
+      "capacity": currentTank.capacity,
+      "criticalLevel": currentTank.criticalLevel,
+      "optimalLevel": currentTank.optimalLevel,
+      "pumpActive": event.active, // Usar el nuevo estado de la bomba
+      "status": currentTank.status,
+      "location": currentTank.location,
+      "userId": int.parse(currentTank.id), // Asumiendo que el ID del usuario se puede obtener así
+    };
+
+    // Reutilizar el evento de actualización para mantener la consistencia
+    add(UpdateTank(tankId: int.parse(currentTank.id), tankData: updatedData));
   }
 }

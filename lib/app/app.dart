@@ -4,11 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:waterguard/app/routes/app_router.dart';
 import 'package:waterguard/app/theme/app_theme.dart';
+import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/domain/repositories/alert_repository.dart';
 import 'package:waterguard/domain/repositories/tank_repository.dart';
 import 'package:waterguard/domain/repositories/user_repository.dart';
 import 'package:waterguard/domain/repositories/water_quality_repository.dart';
-import 'package:waterguard/data/services/auth_service.dart'; // ✅ NUEVA IMPORTACIÓN
+import 'package:waterguard/data/services/auth_service.dart';
 import 'package:waterguard/presentation/blocs/alerts/alerts_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
 import 'package:waterguard/presentation/blocs/dashboard/dashboard_bloc.dart';
@@ -28,7 +29,7 @@ class WaterGuardApp extends StatelessWidget {
         BlocProvider<AuthBloc>(
           create: (context) => AuthBloc(
             userRepository: getIt<UserRepository>(),
-            authService: getIt<AuthService>(), // ✅ PASANDO EL AUTHSERVICE
+            authService: getIt<AuthService>(),
           ),
         ),
         BlocProvider<DashboardBloc>(
@@ -36,6 +37,8 @@ class WaterGuardApp extends StatelessWidget {
             tankRepository: getIt<TankRepository>(),
             waterQualityRepository: getIt<WaterQualityRepository>(),
             alertRepository: getIt<AlertRepository>(),
+            // --- CORRECCIÓN: Inyectar el TankService requerido ---
+            tankService: getIt<TankService>(),
           ),
         ),
         BlocProvider<AlertsBloc>(

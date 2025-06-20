@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/domain/entities/tank.dart';
+import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
+import 'package:waterguard/presentation/blocs/auth/auth_state.dart';
 import 'package:waterguard/presentation/blocs/dashboard/dashboard_bloc.dart';
 import 'package:waterguard/presentation/blocs/dashboard/dashboard_event.dart';
 import 'package:waterguard/presentation/blocs/tank/tank_bloc.dart';
@@ -27,13 +29,11 @@ class _EditTankScreenState extends State<EditTankScreen> {
   @override
   void initState() {
     super.initState();
-    // Inicializa los controladores con los datos actuales del tanque
     _nameController = TextEditingController(text: widget.tank.name);
     _capacityController = TextEditingController(text: widget.tank.capacity.toStringAsFixed(0));
-    final criticalPercent = (widget.tank.criticalLevel / widget.tank.capacity) * 100;
-    final optimalPercent = (widget.tank.optimalLevel / widget.tank.capacity) * 100;
-    _criticalLevelController = TextEditingController(text: criticalPercent.toStringAsFixed(0));
-    _optimalLevelController = TextEditingController(text: optimalPercent.toStringAsFixed(0));
+    // --- CORRECCIÓN: Usar los valores de nivel directamente (asumiendo que son porcentajes) ---
+    _criticalLevelController = TextEditingController(text: widget.tank.criticalLevel.toStringAsFixed(0));
+    _optimalLevelController = TextEditingController(text: widget.tank.optimalLevel.toStringAsFixed(0));
   }
 
   @override
@@ -53,9 +53,7 @@ class _EditTankScreenState extends State<EditTankScreen> {
       ),
       body: BlocListener<TankBloc, TankState>(
         listener: (context, state) {
-          // Si el estado es de éxito en la actualización...
           if (state is TankUpdateSuccess) {
-            // Refresca la lista de tanques en el dashboard
             context.read<DashboardBloc>().add(RefreshDashboard());
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -63,10 +61,8 @@ class _EditTankScreenState extends State<EditTankScreen> {
                 backgroundColor: Colors.green,
               ),
             );
-            // Vuelve a la pantalla anterior
             Navigator.of(context).pop();
           } else if (state is TankError) {
-            // Si hay un error, lo muestra
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -77,11 +73,9 @@ class _EditTankScreenState extends State<EditTankScreen> {
         },
         child: BlocBuilder<TankBloc, TankState>(
           builder: (context, state) {
-            // Muestra un indicador de carga si se está guardando
             if (state is TankLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            // Muestra el formulario en cualquier otro caso
             return _buildForm();
           },
         ),
@@ -171,17 +165,25 @@ class _EditTankScreenState extends State<EditTankScreen> {
       return;
     }
 
-    // Construye el objeto de datos que espera el backend
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Usuario no autenticado.'))
+      );
+      return;
+    }
+
     final updatedData = {
-      "nombre": _nameController.text,
-      "capacidad": double.parse(_capacityController.text),
-      "nivelCritico": double.parse(_criticalLevelController.text),
-      "nivelOptimo": double.parse(_optimalLevelController.text),
-      // Se mantiene la ubicación existente, ya que no se edita en esta pantalla.
-      "ubicacion": widget.tank.location,
+      "name": _nameController.text,
+      "capacity": double.parse(_capacityController.text),
+      "criticalLevel": double.parse(_criticalLevelController.text),
+      "optimalLevel": double.parse(_optimalLevelController.text),
+      "pumpActive": widget.tank.pumpActive,
+      "status": widget.tank.status,
+      "location": widget.tank.location,
+      "userId": int.parse(authState.userId),
     };
 
-    // Despacha el evento al BLoC para iniciar la actualización
     context.read<TankBloc>().add(
       UpdateTank(
         tankId: int.parse(widget.tank.id),

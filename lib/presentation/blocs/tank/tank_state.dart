@@ -8,8 +8,10 @@ class TankInitial extends TankState {}
 
 class TankLoading extends TankState {}
 
-// NUEVO ESTADO: Para notificar éxito en la actualización
 class TankUpdateSuccess extends TankState {}
+
+// --- NUEVA FUNCIONALIDAD: Estado para eliminación exitosa ---
+class TankDeleteSuccess extends TankState {}
 
 class TankDetailLoaded extends TankState {
   final Tank tank;
