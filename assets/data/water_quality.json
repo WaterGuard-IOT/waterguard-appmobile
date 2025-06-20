@@ -1,18 +1,59 @@
 {
   "qualityReadings": [
     {
-      "tankId": "tank001",
-      "timestamp": "2025-04-22T10:30:00Z",
+      "tankId": "1",
+      "timestamp": "2025-01-20T14:30:00.000Z",
       "ph": 7.2,
-      "temperature": 18.5,
+      "temperature": 22.5,
+      "turbidity": 1.8,
+      "conductivity": 350.0,
+      "chlorine": 0.3,
+      "oxygen": 7.5,
       "status": "good"
     },
     {
-      "tankId": "tank002",
-      "timestamp": "2025-04-22T10:25:00Z",
+      "tankId": "2",
+      "timestamp": "2025-01-20T14:25:00.000Z",
       "ph": 6.8,
-      "temperature": 19.2,
+      "temperature": 24.1,
+      "turbidity": 2.2,
+      "conductivity": 420.0,
+      "chlorine": 0.25,
+      "oxygen": 6.8,
       "status": "acceptable"
+    },
+    {
+      "tankId": "3",
+      "timestamp": "2025-01-20T14:20:00.000Z",
+      "ph": 7.8,
+      "temperature": 21.3,
+      "turbidity": 1.1,
+      "conductivity": 280.0,
+      "chlorine": 0.35,
+      "oxygen": 8.2,
+      "status": "good"
+    },
+    {
+      "tankId": "4",
+      "timestamp": "2025-01-20T14:15:00.000Z",
+      "ph": 6.2,
+      "temperature": 26.8,
+      "turbidity": 4.5,
+      "conductivity": 650.0,
+      "chlorine": 0.1,
+      "oxygen": 5.2,
+      "status": "poor"
+    },
+    {
+      "tankId": "5",
+      "timestamp": "2025-01-20T14:10:00.000Z",
+      "ph": 7.5,
+      "temperature": 23.7,
+      "turbidity": 1.9,
+      "conductivity": 375.0,
+      "chlorine": 0.28,
+      "oxygen": 7.1,
+      "status": "good"
     }
   ]
 }
