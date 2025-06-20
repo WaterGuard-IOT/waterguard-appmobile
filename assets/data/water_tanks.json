@@ -1,36 +1,84 @@
 {
   "tanks": [
     {
-      "id": "tank001",
-      "name": "Tanque Comunal Principal",
+      "id": "1",
+      "name": "Tanque Principal",
+      "capacity": 1000.0,
+      "currentLevel": 250.0,
+      "criticalLevel": 20.0,
+      "optimalLevel": 80.0,
+      "pumpActive": false,
+      "status": "warning",
+      "lastUpdated": "2025-01-20T14:30:00.000Z",
       "location": {
         "latitude": -12.0464,
         "longitude": -77.0428,
-        "address": "Plaza Central, Comunidad San Pedro"
-      },
-      "capacity": 5000,
-      "currentLevel": 3750,
-      "criticalLevel": 1000,
-      "optimalLevel": 4000,
-      "lastUpdated": "2025-04-22T10:30:00Z",
-      "status": "normal",
-      "pumpActive": false
+        "address": "Av. Principal 123, San Isidro, Lima"
+      }
     },
     {
-      "id": "tank002",
-      "name": "Tanque Agrícola Norte",
+      "id": "2",
+      "name": "Tanque Secundario",
+      "capacity": 1200.0,
+      "currentLevel": 840.0,
+      "criticalLevel": 20.0,
+      "optimalLevel": 80.0,
+      "pumpActive": false,
+      "status": "normal",
+      "lastUpdated": "2025-01-20T14:25:00.000Z",
       "location": {
-        "latitude": -12.0514,
-        "longitude": -77.0389,
-        "address": "Zona de Cultivos Norte, Comunidad San Pedro"
-      },
-      "capacity": 3000,
-      "currentLevel": 750,
-      "criticalLevel": 800,
-      "optimalLevel": 2500,
-      "lastUpdated": "2025-04-22T10:25:00Z",
-      "status": "warning",
-      "pumpActive": true
+        "latitude": -12.0520,
+        "longitude": -77.0350,
+        "address": "Jr. Los Rosales 456, Miraflores, Lima"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Tanque de Reserva",
+      "capacity": 800.0,
+      "currentLevel": 720.0,
+      "criticalLevel": 20.0,
+      "optimalLevel": 80.0,
+      "pumpActive": true,
+      "status": "normal",
+      "lastUpdated": "2025-01-20T14:20:00.000Z",
+      "location": {
+        "latitude": -12.0380,
+        "longitude": -77.0500,
+        "address": "Calle Las Magnolias 789, San Borja, Lima"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Tanque Industrial",
+      "capacity": 2000.0,
+      "currentLevel": 400.0,
+      "criticalLevel": 15.0,
+      "optimalLevel": 85.0,
+      "pumpActive": false,
+      "status": "critical",
+      "lastUpdated": "2025-01-20T14:15:00.000Z",
+      "location": {
+        "latitude": -12.0600,
+        "longitude": -77.0250,
+        "address": "Av. Industrial 321, Surquillo, Lima"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Tanque Comunitario",
+      "capacity": 1500.0,
+      "currentLevel": 1125.0,
+      "criticalLevel": 20.0,
+      "optimalLevel": 80.0,
+      "pumpActive": false,
+      "status": "normal",
+      "lastUpdated": "2025-01-20T14:10:00.000Z",
+      "location": {
+        "latitude": -12.0320,
+        "longitude": -77.0600,
+        "address": "Plaza Central s/n, Barranco, Lima"
+      }
     }
   ]
 }

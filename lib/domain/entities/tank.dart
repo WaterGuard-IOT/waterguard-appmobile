@@ -1,3 +1,5 @@
+// lib/domain/entities/tank.dart
+
 class Tank {
   final String id;
   final String name;
@@ -23,19 +25,51 @@ class Tank {
     required this.pumpActive,
   });
 
-  double get levelPercentage => (currentLevel / capacity) * 100;
-  bool get isCritical => currentLevel <= criticalLevel;
-  bool get isOptimal => currentLevel >= optimalLevel;
-  bool get needsRefill => currentLevel < optimalLevel;
+  double get levelPercentage => capacity > 0 ? (currentLevel / capacity) * 100 : 0;
+  bool get isCritical => levelPercentage <= criticalLevel;
+  bool get isOptimal => levelPercentage >= optimalLevel;
+  bool get needsRefill => levelPercentage < optimalLevel;
 
-  // Método para determinar el estado del tanque basado en niveles
   String calculateStatus() {
-    if (isCritical) {
-      return 'critical';
-    } else if (needsRefill) {
-      return 'warning';
-    } else {
-      return 'normal';
-    }
+    if (isCritical) return 'critical';
+    if (needsRefill) return 'warning';
+    return 'normal';
+  }
+
+  // --- NUEVA FUNCIONALIDAD: Método para crear copias del objeto ---
+  Tank copyWith({
+    double? currentLevel,
+    bool? pumpActive,
+    DateTime? lastUpdated,
+  }) {
+    return Tank(
+      id: id,
+      name: name,
+      location: location,
+      capacity: capacity,
+      currentLevel: currentLevel ?? this.currentLevel,
+      criticalLevel: criticalLevel,
+      optimalLevel: optimalLevel,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      status: status,
+      pumpActive: pumpActive ?? this.pumpActive,
+    );
+  }
+
+  // --- NUEVA FUNCIONALIDAD: Método para convertir a JSON para el backend ---
+  Map<String, dynamic> toJson() {
+    return {
+      'id': int.tryParse(id) ?? 0,
+      'name': name,
+      'capacity': capacity,
+      'currentLevel': currentLevel,
+      'criticalLevel': criticalLevel,
+      'optimalLevel': optimalLevel,
+      'lastUpdated': lastUpdated.toIso8601String(),
+      'status': status,
+      'pumpActive': pumpActive,
+      'location': location,
+      'userId': int.tryParse(id) ?? 0, // Asumiendo que el userId se puede obtener del tankId
+    };
   }
 }

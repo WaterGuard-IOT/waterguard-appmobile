@@ -1,4 +1,4 @@
-// Modelos adaptados para el backend según OpenAPI
+// lib/data/models/backend_models.dart
 
 import '../../domain/entities/tank.dart';
 import '../../domain/entities/user.dart';
@@ -74,46 +74,40 @@ class BackendTankModel extends Tank {
   );
 
   factory BackendTankModel.fromJson(Map<String, dynamic> json) {
-    // Capacidad fija por ahora (se puede hacer configurable después)
-    const capacity = 1000.0;
+    // --- CORRECCIÓN AQUÍ ---
+    // Se leen los valores directamente del JSON en lugar de usar valores fijos.
 
-    // Calcular nivel actual basado en el porcentaje del backend
-    double currentLevel = capacity * 0.5; // Por defecto 50%
-    DateTime lastUpdated = DateTime.now();
+    // 1. Lee la capacidad del JSON. Si es nula, usa 0.0 como valor por defecto.
+    final double capacity = (json['capacity'] as num?)?.toDouble() ?? 0.0;
 
-    if (json['nivel'] != null) {
-      final nivelData = json['nivel'] as Map<String, dynamic>;
-      if (nivelData['porcentaje'] != null) {
-        currentLevel = capacity * (nivelData['porcentaje'] / 100.0);
-      }
-      if (nivelData['fechaMedicion'] != null) {
-        lastUpdated = DateTime.parse(nivelData['fechaMedicion']);
-      }
+    // 2. Lee el nivel actual. Si es nulo, usa 0.0.
+    final double currentLevel = (json['currentLevel'] as num?)?.toDouble() ?? 0.0;
+
+    // 3. Intenta parsear la fecha. Si es nula o inválida, usa la fecha actual.
+    DateTime lastUpdated;
+    try {
+      lastUpdated = json['lastUpdated'] != null
+          ? DateTime.parse(json['lastUpdated'])
+          : DateTime.now();
+    } catch (e) {
+      lastUpdated = DateTime.now();
     }
 
     return BackendTankModel(
       id: json['id'].toString(),
-      name: 'Tanque ${json['id']}',
-      location: {
-        'latitude': -12.0464,
-        'longitude': -77.0428,
-        'address': 'Lima, Perú',
-      },
+      // 4. Lee el nombre del JSON. Si es nulo, crea uno genérico.
+      name: json['name'] ?? 'Tanque ${json['id']}',
+      // 5. Lee la ubicación. Si es nula, provee un mapa vacío.
+      location: json['location'] != null ? Map<String, dynamic>.from(json['location']) : {},
+      // 6. Asigna los valores leídos del JSON.
       capacity: capacity,
       currentLevel: currentLevel,
-      criticalLevel: capacity * 0.2, // 20%
-      optimalLevel: capacity * 0.8, // 80%
+      criticalLevel: (json['criticalLevel'] as num?)?.toDouble() ?? 0.0,
+      optimalLevel: (json['optimalLevel'] as num?)?.toDouble() ?? 0.0,
       lastUpdated: lastUpdated,
-      status: _calculateStatus(currentLevel, capacity),
-      pumpActive: false, // No disponible en backend actual
+      status: json['status'] ?? 'unknown',
+      pumpActive: json['pumpActive'] ?? false,
     );
-  }
-
-  static String _calculateStatus(double currentLevel, double capacity) {
-    final percentage = (currentLevel / capacity) * 100;
-    if (percentage < 20) return 'critical';
-    if (percentage < 50) return 'warning';
-    return 'normal';
   }
 
   Map<String, dynamic> toJson() {
@@ -189,3 +183,4 @@ class BackendWaterQualityModel extends WaterQuality {
     };
   }
 }
+

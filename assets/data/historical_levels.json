@@ -1,29 +1,360 @@
 {
   "historicalData": [
     {
-      "tankId": "tank001",
+      "tankId": "1",
       "readings": [
-        {"timestamp": "2025-04-15T10:00:00Z", "level": 4200},
-        {"timestamp": "2025-04-16T10:00:00Z", "level": 4050},
-        {"timestamp": "2025-04-17T10:00:00Z", "level": 3900},
-        {"timestamp": "2025-04-18T10:00:00Z", "level": 3800},
-        {"timestamp": "2025-04-19T10:00:00Z", "level": 4100},
-        {"timestamp": "2025-04-20T10:00:00Z", "level": 3950},
-        {"timestamp": "2025-04-21T10:00:00Z", "level": 3850},
-        {"timestamp": "2025-04-22T10:00:00Z", "level": 3750}
+        {
+          "timestamp": "2025-01-13T00:00:00.000Z",
+          "level": 450.0,
+          "percentage": 45.0,
+          "pumpActive": false,
+          "ph": 7.1,
+          "temperature": 21.5,
+          "turbidity": 1.9
+        },
+        {
+          "timestamp": "2025-01-13T06:00:00.000Z",
+          "level": 485.0,
+          "percentage": 48.5,
+          "pumpActive": true,
+          "ph": 7.2,
+          "temperature": 22.0,
+          "turbidity": 1.8
+        },
+        {
+          "timestamp": "2025-01-13T12:00:00.000Z",
+          "level": 520.0,
+          "percentage": 52.0,
+          "pumpActive": false,
+          "ph": 7.0,
+          "temperature": 23.1,
+          "turbidity": 2.0
+        },
+        {
+          "timestamp": "2025-01-13T18:00:00.000Z",
+          "level": 495.0,
+          "percentage": 49.5,
+          "pumpActive": false,
+          "ph": 7.3,
+          "temperature": 22.8,
+          "turbidity": 1.7
+        },
+        {
+          "timestamp": "2025-01-14T00:00:00.000Z",
+          "level": 470.0,
+          "percentage": 47.0,
+          "pumpActive": false,
+          "ph": 7.1,
+          "temperature": 21.9,
+          "turbidity": 1.9
+        },
+        {
+          "timestamp": "2025-01-14T06:00:00.000Z",
+          "level": 650.0,
+          "percentage": 65.0,
+          "pumpActive": true,
+          "ph": 7.2,
+          "temperature": 22.2,
+          "turbidity": 1.6
+        },
+        {
+          "timestamp": "2025-01-14T12:00:00.000Z",
+          "level": 720.0,
+          "percentage": 72.0,
+          "pumpActive": false,
+          "ph": 7.4,
+          "temperature": 23.5,
+          "turbidity": 1.5
+        },
+        {
+          "timestamp": "2025-01-14T18:00:00.000Z",
+          "level": 680.0,
+          "percentage": 68.0,
+          "pumpActive": false,
+          "ph": 7.3,
+          "temperature": 23.0,
+          "turbidity": 1.7
+        },
+        {
+          "timestamp": "2025-01-15T00:00:00.000Z",
+          "level": 655.0,
+          "percentage": 65.5,
+          "pumpActive": false,
+          "ph": 7.2,
+          "temperature": 22.4,
+          "turbidity": 1.8
+        },
+        {
+          "timestamp": "2025-01-15T06:00:00.000Z",
+          "level": 630.0,
+          "percentage": 63.0,
+          "pumpActive": false,
+          "ph": 7.1,
+          "temperature": 22.0,
+          "turbidity": 1.9
+        },
+        {
+          "timestamp": "2025-01-15T12:00:00.000Z",
+          "level": 605.0,
+          "percentage": 60.5,
+          "pumpActive": false,
+          "ph": 7.0,
+          "temperature": 23.2,
+          "turbidity": 2.0
+        },
+        {
+          "timestamp": "2025-01-15T18:00:00.000Z",
+          "level": 580.0,
+          "percentage": 58.0,
+          "pumpActive": false,
+          "ph": 6.9,
+          "temperature": 23.8,
+          "turbidity": 2.1
+        },
+        {
+          "timestamp": "2025-01-16T00:00:00.000Z",
+          "level": 555.0,
+          "percentage": 55.5,
+          "pumpActive": false,
+          "ph": 7.0,
+          "temperature": 22.9,
+          "turbidity": 2.0
+        },
+        {
+          "timestamp": "2025-01-16T06:00:00.000Z",
+          "level": 530.0,
+          "percentage": 53.0,
+          "pumpActive": false,
+          "ph": 7.1,
+          "temperature": 22.3,
+          "turbidity": 1.9
+        },
+        {
+          "timestamp": "2025-01-16T12:00:00.000Z",
+          "level": 505.0,
+          "percentage": 50.5,
+          "pumpActive": false,
+          "ph": 7.2,
+          "temperature": 23.6,
+          "turbidity": 1.8
+        },
+        {
+          "timestamp": "2025-01-16T18:00:00.000Z",
+          "level": 480.0,
+          "percentage": 48.0,
+          "pumpActive": false,
+          "ph": 7.3,
+          "temperature": 24.1,
+          "turbidity": 1.7
+        },
+        {
+          "timestamp": "2025-01-17T00:00:00.000Z",
+          "level": 455.0,
+          "percentage": 45.5,
+          "pumpActive": false,
+          "ph": 7.2,
+          "temperature": 23.5,
+          "turbidity": 1.8
+        },
+        {
+          "timestamp": "2025-01-17T06:00:00.000Z",
+          "level": 750.0,
+          "percentage": 75.0,
+          "pumpActive": true,
+          "ph": 7.4,
+          "temperature": 22.8,
+          "turbidity": 1.4
+        },
+        {
+          "timestamp": "2025-01-17T12:00:00.000Z",
+          "level": 720.0,
+          "percentage": 72.0,
+          "pumpActive": false,
+          "ph": 7.3,
+          "temperature": 23.9,
+          "turbidity": 1.5
+        },
+        {
+          "timestamp": "2025-01-17T18:00:00.000Z",
+          "level": 695.0,
+          "percentage": 69.5,
+          "pumpActive": false,
+          "ph": 7.2,
+          "temperature": 24.2,
+          "turbidity": 1.6
+        }
       ]
     },
     {
-      "tankId": "tank002",
+      "tankId": "2",
       "readings": [
-        {"timestamp": "2025-04-15T10:00:00Z", "level": 2100},
-        {"timestamp": "2025-04-16T10:00:00Z", "level": 1950},
-        {"timestamp": "2025-04-17T10:00:00Z", "level": 1800},
-        {"timestamp": "2025-04-18T10:00:00Z", "level": 1600},
-        {"timestamp": "2025-04-19T10:00:00Z", "level": 1400},
-        {"timestamp": "2025-04-20T10:00:00Z", "level": 1200},
-        {"timestamp": "2025-04-21T10:00:00Z", "level": 950},
-        {"timestamp": "2025-04-22T10:00:00Z", "level": 750}
+        {
+          "timestamp": "2025-01-13T00:00:00.000Z",
+          "level": 800.0,
+          "percentage": 80.0,
+          "pumpActive": false,
+          "ph": 6.8,
+          "temperature": 24.0,
+          "turbidity": 2.2
+        },
+        {
+          "timestamp": "2025-01-13T06:00:00.000Z",
+          "level": 775.0,
+          "percentage": 77.5,
+          "pumpActive": false,
+          "ph": 6.9,
+          "temperature": 24.3,
+          "turbidity": 2.1
+        },
+        {
+          "timestamp": "2025-01-13T12:00:00.000Z",
+          "level": 750.0,
+          "percentage": 75.0,
+          "pumpActive": false,
+          "ph": 6.8,
+          "temperature": 25.1,
+          "turbidity": 2.3
+        },
+        {
+          "timestamp": "2025-01-13T18:00:00.000Z",
+          "level": 725.0,
+          "percentage": 72.5,
+          "pumpActive": false,
+          "ph": 6.7,
+          "temperature": 24.8,
+          "turbidity": 2.4
+        },
+        {
+          "timestamp": "2025-01-14T00:00:00.000Z",
+          "level": 700.0,
+          "percentage": 70.0,
+          "pumpActive": false,
+          "ph": 6.8,
+          "temperature": 24.2,
+          "turbidity": 2.2
+        },
+        {
+          "timestamp": "2025-01-14T06:00:00.000Z",
+          "level": 675.0,
+          "percentage": 67.5,
+          "pumpActive": false,
+          "ph": 6.9,
+          "temperature": 23.9,
+          "turbidity": 2.1
+        },
+        {
+          "timestamp": "2025-01-14T12:00:00.000Z",
+          "level": 650.0,
+          "percentage": 65.0,
+          "pumpActive": false,
+          "ph": 6.8,
+          "temperature": 24.7,
+          "turbidity": 2.3
+        },
+        {
+          "timestamp": "2025-01-14T18:00:00.000Z",
+          "level": 625.0,
+          "percentage": 62.5,
+          "pumpActive": false,
+          "ph": 6.7,
+          "temperature": 25.0,
+          "turbidity": 2.4
+        },
+        {
+          "timestamp": "2025-01-15T00:00:00.000Z",
+          "level": 600.0,
+          "percentage": 60.0,
+          "pumpActive": false,
+          "ph": 6.8,
+          "temperature": 24.5,
+          "turbidity": 2.2
+        },
+        {
+          "timestamp": "2025-01-15T06:00:00.000Z",
+          "level": 575.0,
+          "percentage": 57.5,
+          "pumpActive": false,
+          "ph": 6.9,
+          "temperature": 24.1,
+          "turbidity": 2.1
+        }
+      ]
+    },
+    {
+      "tankId": "3",
+      "readings": [
+        {
+          "timestamp": "2025-01-13T00:00:00.000Z",
+          "level": 950.0,
+          "percentage": 95.0,
+          "pumpActive": false,
+          "ph": 7.8,
+          "temperature": 21.0,
+          "turbidity": 1.1
+        },
+        {
+          "timestamp": "2025-01-13T06:00:00.000Z",
+          "level": 925.0,
+          "percentage": 92.5,
+          "pumpActive": false,
+          "ph": 7.7,
+          "temperature": 21.3,
+          "turbidity": 1.2
+        },
+        {
+          "timestamp": "2025-01-13T12:00:00.000Z",
+          "level": 900.0,
+          "percentage": 90.0,
+          "pumpActive": false,
+          "ph": 7.8,
+          "temperature": 21.8,
+          "turbidity": 1.0
+        },
+        {
+          "timestamp": "2025-01-13T18:00:00.000Z",
+          "level": 875.0,
+          "percentage": 87.5,
+          "pumpActive": false,
+          "ph": 7.9,
+          "temperature": 21.5,
+          "turbidity": 0.9
+        },
+        {
+          "timestamp": "2025-01-14T00:00:00.000Z",
+          "level": 850.0,
+          "percentage": 85.0,
+          "pumpActive": false,
+          "ph": 7.8,
+          "temperature": 21.2,
+          "turbidity": 1.1
+        },
+        {
+          "timestamp": "2025-01-14T06:00:00.000Z",
+          "level": 825.0,
+          "percentage": 82.5,
+          "pumpActive": false,
+          "ph": 7.7,
+          "temperature": 21.4,
+          "turbidity": 1.2
+        },
+        {
+          "timestamp": "2025-01-14T12:00:00.000Z",
+          "level": 800.0,
+          "percentage": 80.0,
+          "pumpActive": false,
+          "ph": 7.8,
+          "temperature": 22.0,
+          "turbidity": 1.0
+        },
+        {
+          "timestamp": "2025-01-14T18:00:00.000Z",
+          "level": 775.0,
+          "percentage": 77.5,
+          "pumpActive": false,
+          "ph": 7.9,
+          "temperature": 21.7,
+          "turbidity": 0.9
+        }
       ]
     }
   ]
