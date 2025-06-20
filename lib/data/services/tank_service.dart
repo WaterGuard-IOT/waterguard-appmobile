@@ -1,3 +1,4 @@
+// lib/data/services/tank_service.dart
 import 'package:waterguard/data/services/http_service.dart';
 
 class TankService {
@@ -5,44 +6,32 @@ class TankService {
 
   TankService(this._httpService);
 
-  Future<Map<String, dynamic>> createTank(int usuarioId) async {
-    final response = await _httpService.post('/usuario/$usuarioId/tanques');
-    return response.data as Map<String, dynamic>;
-  }
-
+  /// Obtiene todos los tanques asociados a un ID de usuario.
   Future<List<dynamic>> getTanksByUser(int usuarioId) async {
     final response = await _httpService.get('/usuario/$usuarioId/tanques');
     return response.data as List<dynamic>;
   }
 
+  /// Obtiene los detalles de un tanque específico por su ID.
   Future<Map<String, dynamic>> getTankById(int tanqueId) async {
     final response = await _httpService.get('/tanque/$tanqueId');
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> registerWaterQuality(
-      int tanqueId, {
-        required double ph,
-        required double turbidez,
-        required double conductividad,
-        required double temperatura,
-      }) async {
-    final response = await _httpService.post('/tanque/$tanqueId/calidad', data: {
-      'ph': ph,
-      'turbidez': turbidez,
-      'conductividad': conductividad,
-      'temperatura': temperatura,
-    });
+  /// Crea un nuevo tanque con datos personalizados.
+  Future<Map<String, dynamic>> createTank(Map<String, dynamic> tankData) async {
+    print('📦 Enviando datos para crear tanque: $tankData');
+    final response = await _httpService.post('/tanque', data: tankData);
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> registerWaterLevel(
-      int tanqueId, {
-        required double porcentaje,
-      }) async {
-    final response = await _httpService.post('/tanque/$tanqueId/nivel', data: {
-      'porcentaje': porcentaje,
-    });
+  /// **(CLAVE)** Actualiza un tanque existente usando el método PUT.
+  /// Se comunica con el endpoint PUT /api/tanque/{id}
+  Future<Map<String, dynamic>> updateTank(
+      int tankId, Map<String, dynamic> tankData) async {
+    print('🔄 Enviando actualización PUT para tanque $tankId: $tankData');
+    // Utiliza el método put del httpService que corresponde a PUT
+    final response = await _httpService.put('/tanque/$tankId', data: tankData);
     return response.data as Map<String, dynamic>;
   }
 }

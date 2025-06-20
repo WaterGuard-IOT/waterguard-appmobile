@@ -1,6 +1,7 @@
 // lib/presentation/screens/add_tank/add_tank_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_bloc.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_event.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_state.dart';
@@ -16,489 +17,233 @@ class AddTankScreen extends StatefulWidget {
   State<AddTankScreen> createState() => _AddTankScreenState();
 }
 
-class _AddTankScreenState extends State<AddTankScreen> with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late AnimationController _successAnimationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _successScaleAnimation;
+class _AddTankScreenState extends State<AddTankScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _capacityController = TextEditingController(text: '1000');
+  final _criticalLevelController = TextEditingController(text: '20');
+  final _optimalLevelController = TextEditingController(text: '80');
+  final _addressController = TextEditingController();
+
+  Position? _currentPosition;
+  bool _isFetchingLocation = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Animación para el botón principal
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    // Animación para el éxito
-    _successAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _successScaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _successAnimationController,
-      curve: Curves.elasticOut,
-    ));
-
-    // Reset del estado al iniciar
     context.read<AddTankBloc>().add(ResetAddTankState());
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _successAnimationController.dispose();
+    _nameController.dispose();
+    _capacityController.dispose();
+    _criticalLevelController.dispose();
+    _optimalLevelController.dispose();
+    _addressController.dispose();
     super.dispose();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isFetchingLocation = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Permiso de ubicación denegado')));
+          setState(() => _isFetchingLocation = false);
+          return;
+        }
+      }
+      _currentPosition = await Geolocator.getCurrentPosition();
+      _addressController.text = 'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, Lon: ${_currentPosition!.longitude.toStringAsFixed(4)}';
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No se pudo obtener la ubicación: $e')));
+    } finally {
+      setState(() => _isFetchingLocation = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Agregar Nuevo Tanque'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDarkMode
-                ? [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Colors.transparent,
-            ]
-                : [
-              Theme.of(context).primaryColor.withOpacity(0.05),
-              Colors.transparent,
-            ],
-          ),
-        ),
-        child: BlocConsumer<AddTankBloc, AddTankState>(
-          listener: (context, state) {
-            if (state is AddTankSuccess) {
-              _successAnimationController.forward();
-
-              // Actualizar el dashboard
-              context.read<DashboardBloc>().add(RefreshDashboard());
-
-              // Mostrar mensaje de éxito y volver después de un delay
-              Future.delayed(const Duration(seconds: 2), () {
-                if (mounted) {
-                  Navigator.of(context).pop();
-                }
-              });
-            } else if (state is AddTankError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state is AddTankSuccess) {
-              return _buildSuccessView(state);
-            }
-
-            return _buildMainView(context, state, isDarkMode);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMainView(BuildContext context, AddTankState state, bool isDarkMode) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 40),
-
-          // Icono principal con animación
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withOpacity(0.7),
+      body: BlocConsumer<AddTankBloc, AddTankState>(
+        listener: (context, state) {
+          if (state is AddTankSuccess) {
+            // Actualizar dashboard y volver a la pantalla anterior
+            context.read<DashboardBloc>().add(RefreshDashboard());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Tanque creado exitosamente!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.of(context).pop();
+          } else if (state is AddTankError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is AddTankLoading) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Creando tanque...'),
                 ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.add_circle_outline,
-              size: 60,
-              color: Colors.white,
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Título principal
-          Text(
-            'Crear Nuevo Tanque',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? Colors.white : Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Descripción
-          Text(
-            'Agrega un nuevo tanque de agua a tu sistema de monitoreo. El tanque se creará con configuraciones por defecto que podrás ajustar más tarde.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade600,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 48),
-
-          // Card con información del tanque a crear
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey.shade800 : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDarkMode
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.water_drop,
-                        color: Theme.of(context).primaryColor,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Configuración Inicial',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDarkMode ? Colors.white : null,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'El tanque se creará con valores estándar',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDarkMode
-                                  ? Colors.grey.shade400
-                                  : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Especificaciones por defecto
-                _buildSpecRow(context, 'Capacidad:', '1,000 L', Icons.water),
-                const SizedBox(height: 12),
-                _buildSpecRow(context, 'Nivel crítico:', '20%', Icons.warning_amber),
-                const SizedBox(height: 12),
-                _buildSpecRow(context, 'Nivel óptimo:', '80%', Icons.check_circle),
-                const SizedBox(height: 12),
-                _buildSpecRow(context, 'Estado inicial:', 'Normal', Icons.info),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 48),
-
-          // Botón principal con animación (CORREGIDO)
-          AnimatedBuilder(
-            animation: _scaleAnimation,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: _scaleAnimation.value,
-                child: GestureDetector(
-                  onTapDown: state is AddTankLoading ? null : (_) => _animationController.forward(),
-                  onTapUp: state is AddTankLoading ? null : (_) => _animationController.reverse(),
-                  onTapCancel: state is AddTankLoading ? null : () => _animationController.reverse(),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: state is AddTankLoading
-                            ? [Colors.grey, Colors.grey.shade600]
-                            : [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withOpacity(0.8),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (state is AddTankLoading
-                              ? Colors.grey
-                              : Theme.of(context).primaryColor).withOpacity(0.4),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: state is AddTankLoading ? null : _createTank,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: state is AddTankLoading
-                          ? const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Creando Tanque...',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      )
-                          : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_circle,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                          SizedBox(width: 12),
-                          Text(
-                            'Crear Tanque',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          // Información adicional
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.blue.withOpacity(0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.blue.shade700,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Podrás configurar sensores y ajustar parámetros desde la pantalla de detalles del tanque.',
-                    style: TextStyle(
-                      color: Colors.blue.shade700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccessView(AddTankSuccess state) {
-    return Center(
-      child: AnimatedBuilder(
-        animation: _successScaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _successScaleAnimation.value,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.green,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 60,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  '¡Tanque Creado!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Tu nuevo tanque ha sido añadido exitosamente al sistema.',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'ID: ${state.tank.id}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          );
+            );
+          }
+          return _buildForm(context);
         },
       ),
     );
   }
 
-  Widget _buildSpecRow(BuildContext context, String label, String value, IconData icon) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildForm(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Información del Tanque', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 24),
+            _buildTextField(
+              controller: _nameController,
+              label: 'Nombre del Tanque',
+              icon: Icons.label,
+              validator: (value) =>
+              value!.isEmpty ? 'Por favor ingresa un nombre' : null,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _capacityController,
+              label: 'Capacidad Total (Litros)',
+              icon: Icons.water,
+              keyboardType: TextInputType.number,
+              validator: (value) =>
+              value!.isEmpty ? 'Ingresa la capacidad' : null,
+            ),
+            const SizedBox(height: 24),
+            Text('Niveles de Alerta (%)', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _criticalLevelController,
+                    label: 'Nivel Crítico (%)',
+                    icon: Icons.warning_amber,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _optimalLevelController,
+                    label: 'Nivel Óptimo (%)',
+                    icon: Icons.check_circle_outline,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text('Ubicación', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _addressController,
+              label: 'Dirección o Coordenadas',
+              icon: Icons.location_on,
+              validator: (value) =>
+              value!.isEmpty ? 'Ingresa la ubicación' : null,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isFetchingLocation ? null : _getCurrentLocation,
+                icon: _isFetchingLocation
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.my_location),
+                label: const Text('Usar ubicación actual'),
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: _createTank,
+              icon: const Icon(Icons.add_circle),
+              label: const Text('Crear Tanque'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
-          ),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.white : Colors.black87,
-          ),
-        ),
-      ],
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
     );
   }
 
   void _createTank() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthAuthenticated) {
-      context.read<AddTankBloc>().add(CreateTank(userId: authState.userId));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Usuario no autenticado'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No estás autenticado.')),
+      );
+      return;
+    }
+
+    final tankData = {
+      "userId": int.parse(authState.userId),
+      "nombre": _nameController.text,
+      "capacidad": double.parse(_capacityController.text),
+      "nivelCritico": double.parse(_criticalLevelController.text),
+      "nivelOptimo": double.parse(_optimalLevelController.text),
+      "ubicacion": {
+        "latitud": _currentPosition?.latitude ?? 0.0,
+        "longitud": _currentPosition?.longitude ?? 0.0,
+        "direccion": _addressController.text,
+      }
+    };
+
+    context.read<AddTankBloc>().add(CreateTank(tankData: tankData));
   }
 }

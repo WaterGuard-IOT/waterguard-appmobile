@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:waterguard/app/routes/app_router.dart';
+import 'package:waterguard/domain/entities/tank.dart';
 import 'package:waterguard/presentation/blocs/tank/tank_bloc.dart';
 import 'package:waterguard/presentation/blocs/tank/tank_event.dart';
 import 'package:waterguard/presentation/blocs/tank/tank_state.dart';
@@ -17,16 +19,14 @@ class TankDetailScreen extends StatefulWidget {
   State<TankDetailScreen> createState() => _TankDetailScreenState();
 }
 
-class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerProviderStateMixin {
+class _TankDetailScreenState extends State<TankDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-
-    // Cargar los datos del tanque
-    context.read<TankBloc>().add(LoadTankDetail(tankId: widget.tankId));
   }
 
   @override
@@ -40,6 +40,30 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del Tanque'),
+        actions: [
+          BlocBuilder<TankBloc, TankState>(
+            builder: (context, state) {
+              if (state is TankDetailLoaded) {
+                return IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Editar Tanque',
+                  onPressed: () {
+                    // --- CORRECCIÓN AQUÍ ---
+                    // Se envían los argumentos como un Map para que el router los pueda procesar correctamente.
+                    Navigator.of(context).pushNamed(
+                      AppRouter.editTank,
+                      arguments: {
+                        'tank': state.tank,
+                        'bloc': context.read<TankBloc>(),
+                      },
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -49,7 +73,17 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
           ],
         ),
       ),
-      body: BlocBuilder<TankBloc, TankState>(
+      body: BlocConsumer<TankBloc, TankState>(
+        listener: (context, state) {
+          if (state is TankError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is TankLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -70,18 +104,10 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                   const Icon(Icons.error_outline, size: 64, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(state.message),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<TankBloc>().add(LoadTankDetail(tankId: widget.tankId));
-                    },
-                    child: const Text('Reintentar'),
-                  ),
                 ],
               ),
             );
           }
-
           return const Center(child: Text('Cargando datos...'));
         },
       ),
@@ -354,7 +380,6 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       );
     }
 
-    // Preparar los datos para el gráfico
     final spots = state.historicalData.asMap().entries.map((entry) {
       final data = entry.value;
       return FlSpot(
@@ -363,7 +388,6 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       );
     }).toList();
 
-    // Colores que funcionan en ambos temas
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final lineColor = isDarkMode ? Colors.lightBlue : Colors.blue;
     final gradientColor = isDarkMode ? Colors.lightBlue.withOpacity(0.3) : Colors.blue.withOpacity(0.2);
@@ -388,7 +412,6 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
           ),
           const SizedBox(height: 16),
 
-          // Gráfico de línea mejorado
           Expanded(
             child: LineChart(
               LineChartData(
@@ -458,42 +481,29 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                       reservedSize: 35,
                     ),
                   ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(
                   show: true,
-                  border: Border.all(
-                    color: gridColor,
-                    width: 1,
-                  ),
+                  border: Border.all(color: gridColor, width: 1),
                 ),
                 minX: 0,
                 maxX: (state.historicalData.length - 1).toDouble(),
                 minY: 0,
-                maxY: state.tank.capacity * 1.1, // Un poco más para dar espacio
-
-                // Configuración del tooltip mejorado
+                maxY: state.tank.capacity * 1.1,
                 lineTouchData: LineTouchData(
                   enabled: true,
                   touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (touchedSpot) => isDarkMode
-                        ? Colors.grey.shade800
-                        : Colors.white,
+                    getTooltipColor: (touchedSpot) => isDarkMode ? Colors.grey.shade800 : Colors.white,
                     getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                       return touchedBarSpots.map((barSpot) {
                         final flSpot = barSpot;
                         final dataIndex = flSpot.x.toInt();
-
                         if (dataIndex >= 0 && dataIndex < state.historicalData.length) {
                           final data = state.historicalData[dataIndex];
                           final date = DateTime.parse(data['timestamp']);
                           final level = flSpot.y;
-
                           return LineTooltipItem(
                             '${DateFormat('dd/MM/yyyy').format(date)}\n${level.toInt()} L',
                             TextStyle(
@@ -506,37 +516,12 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                         return null;
                       }).toList();
                     },
-                    tooltipBorder: BorderSide(
-                      color: isDarkMode ? Colors.white24 : Colors.grey.shade400,
-                      width: 1,
-                    ),
+                    tooltipBorder: BorderSide(color: isDarkMode ? Colors.white24 : Colors.grey.shade400, width: 1),
                     tooltipRoundedRadius: 8,
                     tooltipPadding: const EdgeInsets.all(8),
                   ),
                   handleBuiltInTouches: true,
-                  getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
-                    return spotIndexes.map((spotIndex) {
-                      return TouchedSpotIndicatorData(
-                        FlLine(
-                          color: lineColor,
-                          strokeWidth: 2,
-                          dashArray: [3, 3],
-                        ),
-                        FlDotData(
-                          getDotPainter: (spot, percent, barData, index) {
-                            return FlDotCirclePainter(
-                              radius: 6,
-                              color: Colors.white,
-                              strokeWidth: 3,
-                              strokeColor: lineColor,
-                            );
-                          },
-                        ),
-                      );
-                    }).toList();
-                  },
                 ),
-
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
@@ -544,97 +529,18 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                     color: lineColor,
                     barWidth: 3,
                     isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: lineColor,
-                          strokeWidth: 2,
-                          strokeColor: isDarkMode ? Colors.white : Colors.white,
-                        );
-                      },
-                    ),
+                    dotData: FlDotData(show: true),
                     belowBarData: BarAreaData(
                       show: true,
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          gradientColor,
-                          gradientColor.withOpacity(0.1),
-                        ],
+                        colors: [gradientColor, gradientColor.withOpacity(0.1)],
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Leyenda mejorada
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isDarkMode ? Colors.white24 : Colors.grey.shade300,
-              ),
-            ),
-            child: Column(
-              children: [
-                // Primera fila: Indicador de línea
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 16,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: lineColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Nivel de agua (L)',
-                      style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Segunda fila: Instrucciones de interacción
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.touch_app,
-                      size: 16,
-                      color: textColor.withOpacity(0.7),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'Toca los puntos para más detalles',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textColor.withOpacity(0.7),
-                          fontStyle: FontStyle.italic,
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ),
           ),
         ],
@@ -648,31 +554,20 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
         if (state is TankDetailLoaded) {
           return BottomAppBar(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Botón para controlar la bomba
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Mostrar diálogo de confirmación
                         showDialog(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: Text(
-                              state.tank.pumpActive
-                                  ? 'Desactivar Bomba'
-                                  : 'Activar Bomba',
-                            ),
-                            content: Text(
-                              state.tank.pumpActive
-                                  ? '¿Estás seguro de que deseas desactivar la bomba?'
-                                  : '¿Estás seguro de que deseas activar la bomba?',
-                            ),
+                            title: Text(state.tank.pumpActive ? 'Desactivar Bomba' : 'Activar Bomba'),
+                            content: Text(state.tank.pumpActive
+                                ? '¿Estás seguro de que deseas desactivar la bomba?'
+                                : '¿Estás seguro de que deseas activar la bomba?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(),
@@ -681,25 +576,12 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(ctx).pop();
-
-                                  // Para el prototipo, podemos simplemente llamar a TogglePump
-                                  // y luego forzar un setState para iniciar la animación
                                   context.read<TankBloc>().add(
                                     TogglePump(
                                       tankId: state.tank.id,
                                       active: !state.tank.pumpActive,
                                     ),
                                   );
-
-                                  // Si estás activando la bomba, simula el llenado
-                                  if (!state.tank.pumpActive) {
-                                    // Para prototipo, podemos usar algo simple como esto
-                                    Future.delayed(Duration(milliseconds: 500), () {
-                                      setState(() {
-                                        // Este setState forzará la reconstrucción del widget con isFillingActive=true
-                                      });
-                                    });
-                                  }
                                 },
                                 child: const Text('Confirmar'),
                               ),
@@ -707,20 +589,10 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
                           ),
                         );
                       },
-                      icon: Icon(
-                        state.tank.pumpActive
-                            ? Icons.power_off
-                            : Icons.power,
-                      ),
-                      label: Text(
-                        state.tank.pumpActive
-                            ? 'Desactivar Bomba'
-                            : 'Activar Bomba',
-                      ),
+                      icon: Icon(state.tank.pumpActive ? Icons.power_off : Icons.power),
+                      label: Text(state.tank.pumpActive ? 'Desactivar Bomba' : 'Activar Bomba'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: state.tank.pumpActive
-                            ? Colors.red
-                            : Colors.green,
+                        backgroundColor: state.tank.pumpActive ? Colors.red : Colors.green,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -730,7 +602,6 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
             ),
           );
         }
-
         return const SizedBox.shrink();
       },
     );
@@ -742,30 +613,14 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildParameterCard(
-      BuildContext context,
-      String title,
-      String value,
-      String status,
-      Color statusColor,
-      IconData icon,
-      String description,
-      ) {
+  Widget _buildParameterCard(BuildContext context, String title, String value, String status, Color statusColor, IconData icon, String description) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -776,46 +631,26 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
               children: [
                 Icon(icon, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(value, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(16.0),
                   ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text(description, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -823,26 +658,22 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
   }
 
   Color _getWaterLevelColor(double percentage) {
-    if (percentage < 20) {
-      return const Color(0xFFF44336); // Rojo crítico
-    } else if (percentage < 50) {
-      return const Color(0xFFFF9800); // Naranja advertencia
-    } else {
-      return const Color(0xFF2196F3); // Azul óptimo
-    }
+    if (percentage < 20) return const Color(0xFFF44336);
+    if (percentage < 50) return const Color(0xFFFF9800);
+    return const Color(0xFF2196F3);
   }
 
   Color _getQualityColor(String status) {
     switch (status) {
       case 'excellent':
       case 'good':
-        return const Color(0xFF4CAF50); // Verde bueno
+        return const Color(0xFF4CAF50);
       case 'acceptable':
-        return const Color(0xFFFF9800); // Naranja aceptable
+        return const Color(0xFFFF9800);
       case 'poor':
-        return const Color(0xFFF44336); // Rojo malo
+        return const Color(0xFFF44336);
       default:
-        return const Color(0xFF9E9E9E); // Gris desconocido
+        return const Color(0xFF9E9E9E);
     }
   }
 
@@ -888,11 +719,5 @@ class _TankDetailScreenState extends State<TankDetailScreen> with SingleTickerPr
       default:
         return 'No hay suficiente información sobre la calidad del agua.';
     }
-  }
-
-  Color _getContrastingTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
   }
 }

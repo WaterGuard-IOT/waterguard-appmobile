@@ -1,4 +1,4 @@
-// lib/data/services/auth_service.dart - SIMPLIFICADO PARA USERNAME DIRECTO
+// lib/data/services/auth_service.dart
 import 'package:waterguard/data/services/http_service.dart';
 
 class AuthService {
@@ -6,41 +6,33 @@ class AuthService {
 
   AuthService(this._httpService);
 
-  // ✅ LOGIN SIMPLIFICADO - DIRECTO AL BACKEND
+  /// Realiza el login directamente contra el backend usando username y password.
+  /// Lanza una excepción si el login falla.
   Future<Map<String, dynamic>> login(String username, String password) async {
-    print('🔐 AuthService.login() llamado con username: $username');
-
-    // Limpiar sesión anterior
-    await _httpService.clearSession();
+    print('🔐 AuthService: Intentando login para username: $username');
+    await _httpService.clearSession(); // Limpia cualquier token anterior
 
     try {
-      // Login directo con username - tal como espera el backend
       final response = await _httpService.post('/auth/login', data: {
         'username': username,
         'password': password,
       });
 
       final data = response.data;
-      print('📦 Login exitoso: $data');
-
-      // Guardar token si existe
-      if (data['token'] != null) {
+      if (data != null && data['token'] != null) {
         await _httpService.saveToken(data['token']);
-        print('🎫 Token guardado: ${data['token'].substring(0, 20)}...');
+        print('🎫 AuthService: Token guardado exitosamente.');
       }
-
       return data;
     } catch (e) {
-      print('❌ Error en login: $e');
-      rethrow;
+      print('❌ AuthService: Error en el login: $e');
+      rethrow; // Propaga el error para que sea manejado en el BLoC
     }
   }
 
-  // ✅ REGISTRO SIMPLIFICADO
+  /// Registra un nuevo usuario en el backend.
   Future<String> register(String username, String email, String password) async {
-    print('📝 AuthService.register() llamado para: $username');
-
-    // Limpiar cualquier sesión anterior
+    print('📝 AuthService: Registrando nuevo usuario: $username');
     await _httpService.clearSession();
 
     try {
@@ -49,192 +41,52 @@ class AuthService {
         'email': email,
         'password': password,
       });
-
-      print('✅ Usuario registrado exitosamente: $username');
-      return response.data as String;
+      print('✅ AuthService: Usuario registrado exitosamente.');
+      return response.data.toString();
     } catch (e) {
-      print('❌ Error en registro: $e');
+      print('❌ AuthService: Error en el registro: $e');
       rethrow;
     }
   }
 
-  // ✅ OBTENER USUARIOS (PARA DEBUG)
+  /// Obtiene la lista completa de usuarios del backend.
+  /// Utilizado para buscar detalles de un usuario después del login.
   Future<List<dynamic>> getUsers() async {
-    print('👥 AuthService.getUsers() llamado');
-
+    print('👥 AuthService: Obteniendo lista de usuarios.');
     try {
       final response = await _httpService.get('/auth/users');
-      print('✅ Usuarios obtenidos: ${response.data.length} usuarios');
       return response.data as List<dynamic>;
     } catch (e) {
-      print('❌ Error al obtener usuarios: $e');
-      // Si falla por autenticación, devolver lista vacía
-      if (e.toString().contains('403') || e.toString().contains('401')) {
-        print('🔒 No autorizado para obtener usuarios');
-        return [];
-      }
-      rethrow;
+      print('❌ AuthService: Error al obtener usuarios: $e');
+      return []; // Devuelve lista vacía en caso de error
     }
   }
 
-  // ✅ OBTENER USUARIO POR ID (SIMPLIFICADO)
-  Future<Map<String, dynamic>?> getUserById(String id) async {
-    print('🔍 AuthService.getUserById() llamado con ID: $id');
-
-    try {
-      final users = await getUsers();
-
-      if (users.isEmpty) {
-        print('📝 Lista de usuarios vacía');
-        return null;
-      }
-
-      final user = users.firstWhere(
-            (user) => user['id'].toString() == id,
-        orElse: () => null,
-      );
-
-      if (user != null) {
-        print('✅ Usuario encontrado: ${user['username']}');
-      } else {
-        print('❌ Usuario no encontrado con ID: $id');
-      }
-
-      return user;
-    } catch (e) {
-      print('❌ Error al buscar usuario por ID: $e');
-      return null;
-    }
-  }
-
-  // ✅ BUSCAR USUARIO POR USERNAME
+  /// Busca un usuario específico por su nombre de usuario.
   Future<Map<String, dynamic>?> getUserByUsername(String username) async {
-    print('🔍 AuthService.getUserByUsername() llamado con: $username');
-
+    print('🔍 AuthService: Buscando usuario por username: $username');
     try {
       final users = await getUsers();
       final user = users.firstWhere(
             (user) => user['username'] == username,
         orElse: () => null,
       );
-
       if (user != null) {
-        print('✅ Usuario encontrado: ${user['email']}');
+        print('✅ AuthService: Usuario encontrado.');
       } else {
-        print('❌ Usuario no encontrado con username: $username');
+        print('⚠️ AuthService: Usuario no encontrado con username: $username');
       }
-
       return user;
     } catch (e) {
-      print('❌ Error al buscar usuario por username: $e');
+      print('❌ AuthService: Error buscando por username: $e');
       return null;
     }
   }
 
-  // ✅ LOGOUT/LIMPIAR SESIÓN
+  /// Cierra la sesión, eliminando el token almacenado.
   Future<void> logout() async {
-    print('🚪 Cerrando sesión...');
+    print('🚪 AuthService: Cerrando sesión...');
     await _httpService.clearSession();
-    print('✅ Sesión cerrada correctamente');
-  }
-
-  // ✅ DEBUG: MOSTRAR USUARIOS EXISTENTES
-  Future<void> debugShowExistingUsers() async {
-    print('🔍 === DEBUGGING: Verificando usuarios existentes ===');
-    try {
-      final users = await getUsers();
-
-      print('📋 Usuarios encontrados en el backend:');
-      if (users.isEmpty) {
-        print('❌ No hay usuarios registrados en el backend');
-        print('💡 Necesitas crear un usuario primero usando register');
-      } else {
-        for (int i = 0; i < users.length; i++) {
-          final user = users[i];
-          print('   ${i + 1}. Username: ${user['username']}, Email: ${user['email']}, ID: ${user['id']}');
-        }
-      }
-    } catch (e) {
-      print('❌ No se pudo obtener lista de usuarios: $e');
-    }
-    print('🔍 === FIN DEBUGGING ===');
-  }
-
-  // ✅ CREAR USUARIO DE PRUEBA ESPECÍFICO
-  Future<bool> createSpecificTestUser(String username, String email, String password) async {
-    print('🧪 Creando usuario específico: $username');
-    try {
-      await register(username, email, password);
-      print('✅ Usuario $username creado exitosamente');
-      return true;
-    } catch (e) {
-      final errorString = e.toString().toLowerCase();
-      if (errorString.contains('already exists') ||
-          errorString.contains('duplicate') ||
-          errorString.contains('ya existe')) {
-        print('ℹ️ Usuario $username ya existe');
-        return true;
-      } else {
-        print('❌ Error creando usuario $username: $e');
-        return false;
-      }
-    }
-  }
-
-  // ✅ MÉTODO DE COMPATIBILIDAD PARA EL REPOSITORIO
-  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
-    print('🔍 AuthService.getUserByEmail() llamado con: $email');
-
-    try {
-      final users = await getUsers();
-      final user = users.firstWhere(
-            (user) => user['email'] == email,
-        orElse: () => null,
-      );
-
-      if (user != null) {
-        print('✅ Usuario encontrado por email: ${user['username']}');
-      } else {
-        print('❌ Usuario no encontrado con email: $email');
-      }
-
-      return user;
-    } catch (e) {
-      print('❌ Error al buscar usuario por email: $e');
-      return null;
-    }
-  }
-
-  // ✅ MÉTODO PARA CREAR USUARIO DE PRUEBA SI NO EXISTE
-  Future<Map<String, dynamic>?> createTestUserIfNeeded() async {
-    print('🧪 AuthService.createTestUserIfNeeded() llamado');
-
-    try {
-      const testUsername = 'testuser';
-      const testEmail = 'test@waterguard.com';
-      const testPassword = 'password123';
-
-      // Verificar si ya existe
-      final existingUser = await getUserByUsername(testUsername);
-      if (existingUser != null) {
-        print('✅ Usuario de prueba ya existe');
-        return existingUser;
-      }
-
-      // Crear usuario de prueba
-      print('📝 Creando usuario de prueba...');
-      await register(testUsername, testEmail, testPassword);
-      return await getUserByUsername(testUsername);
-    } catch (e) {
-      print('❌ Error al crear usuario de prueba: $e');
-
-      // Si falla, devolver datos de prueba básicos
-      return {
-        'id': 1,
-        'username': 'testuser',
-        'email': 'test@waterguard.com',
-        'tanques': [],
-      };
-    }
+    print('✅ AuthService: Sesión cerrada.');
   }
 }

@@ -1,7 +1,8 @@
 // lib/presentation/blocs/add_tank/add_tank_bloc.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/data/models/backend_models.dart';
+import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_event.dart';
 import 'package:waterguard/presentation/blocs/add_tank/add_tank_state.dart';
 
@@ -19,22 +20,19 @@ class AddTankBloc extends Bloc<AddTankEvent, AddTankState> {
       ) async {
     emit(AddTankLoading());
     try {
-      final userId = int.parse(event.userId);
-      final tankData = await tankService.createTank(userId);
-
-      // Convertir la respuesta del backend a nuestro modelo
+      // CORREGIDO: Llama al servicio con el mapa de datos completo.
+      final tankData = await tankService.createTank(event.tankData);
       final tank = BackendTankModel.fromJson(tankData);
-
       emit(AddTankSuccess(tank: tank));
     } catch (e) {
       emit(AddTankError('Error al crear el tanque: ${e.toString()}'));
     }
   }
 
-  Future<void> _onResetState(
+  void _onResetState(
       ResetAddTankState event,
       Emitter<AddTankState> emit,
-      ) async {
+      ) {
     emit(AddTankInitial());
   }
 }

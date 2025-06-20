@@ -1,12 +1,14 @@
-// lib/presentation/blocs/auth/auth_event.dart - REEMPLAZAR TODO EL CONTENIDO
+// lib/presentation/blocs/auth/auth_event.dart
+
 abstract class AuthEvent {}
 
 class LoginRequested extends AuthEvent {
-  final String email;
+  // CORREGIDO: El parámetro ahora es 'username' para reflejar su propósito.
+  final String username;
   final String password;
 
   LoginRequested({
-    required this.email,
+    required this.username,
     required this.password,
   });
 }

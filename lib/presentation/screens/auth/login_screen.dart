@@ -1,12 +1,12 @@
-// lib/presentation/screens/auth/login_screen.dart - CORREGIDO PARA USERNAME
+// lib/presentation/screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:waterguard/app/routes/app_router.dart';
+import 'package:waterguard/data/services/auth_service.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_event.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_state.dart';
-import 'package:waterguard/app/routes/app_router.dart';
-import 'package:waterguard/data/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -36,7 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('WaterGuard Login'),
         actions: [
           IconButton(
-            icon: Icon(_showDebugPanel ? Icons.bug_report : Icons.bug_report_outlined),
+            icon: Icon(_showDebugPanel
+                ? Icons.bug_report
+                : Icons.bug_report_outlined),
             tooltip: 'Panel de Debug',
             onPressed: () {
               setState(() {
@@ -71,126 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDebugPanel() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        border: Border.all(color: Colors.orange),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.bug_report, color: Colors.orange.shade700),
-              const SizedBox(width: 8),
-              Text(
-                'Panel de Debug - Solo para Desarrollo',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange.shade700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Botón para crear usuario de prueba
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final authService = GetIt.instance<AuthService>();
-                try {
-                  await authService.register('testuser', 'test@waterguard.com', 'password123');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Usuario de prueba creado: testuser'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  // Auto-llenar formulario
-                  _usernameController.text = 'testuser';
-                  _passwordController.text = 'password123';
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Usuario ya existe o error: $e'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                  // Aún así llenar el formulario por si ya existía
-                  _usernameController.text = 'testuser';
-                  _passwordController.text = 'password123';
-                }
-              },
-              icon: const Icon(Icons.science),
-              label: const Text('Crear Usuario de Prueba'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Botón para verificar usuarios
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final authService = GetIt.instance<AuthService>();
-                await authService.debugShowExistingUsers();
-              },
-              icon: const Icon(Icons.people),
-              label: const Text('Ver Usuarios Existentes'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Información sobre el login
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '💡 Instrucciones:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '1. El backend requiere USERNAME (no email) para login\n'
-                      '2. Crea un usuario de prueba con el botón verde\n'
-                      '3. Usa "testuser" y "password123" para hacer login\n'
-                      '4. El campo ahora pide USERNAME en lugar de email',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -324,7 +206,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     BoxShadow(
                       color: (state is AuthLoading
                           ? Colors.grey
-                          : Theme.of(context).primaryColor).withOpacity(0.4),
+                          : Theme.of(context).primaryColor)
+                          .withOpacity(0.4),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -335,10 +218,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? null
                       : () {
                     if (_formKey.currentState!.validate()) {
-                      // Ahora enviamos username directamente
+                      // CORREGIDO: Se usa el parámetro 'username' y el controlador correcto.
                       context.read<AuthBloc>().add(
                         LoginRequested(
-                          email: _usernameController.text, // Reutilizamos el campo email pero enviamos username
+                          username: _usernameController.text,
                           password: _passwordController.text,
                         ),
                       );
@@ -414,6 +297,73 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- PANEL DE DEBUG (OPCIONAL PERO ÚTIL) ---
+  Widget _buildDebugPanel() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        border: Border.all(color: Colors.orange),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bug_report, color: Colors.orange.shade700),
+              const SizedBox(width: 8),
+              Text(
+                'Panel de Debug',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange.shade700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final authService = GetIt.instance<AuthService>();
+                try {
+                  await authService.register(
+                      'testuser', 'test@waterguard.com', 'password123');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Usuario de prueba creado: testuser'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  _usernameController.text = 'testuser';
+                  _passwordController.text = 'password123';
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Usuario "testuser" ya existe o hubo un error.'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  _usernameController.text = 'testuser';
+                  _passwordController.text = 'password123';
+                }
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text('Crear/Usar Usuario de Prueba'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
