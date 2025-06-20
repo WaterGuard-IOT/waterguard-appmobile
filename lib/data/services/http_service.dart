@@ -1,3 +1,4 @@
+// lib/data/services/http_service.dart - CORREGIDO PARA EXCLUIR TOKEN EN AUTH
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,13 +24,28 @@ class HttpService {
       return client;
     };
 
-    // Interceptor para agregar token JWT automáticamente
+    // ✅ INTERCEPTOR CORREGIDO - NO ENVIAR TOKEN EN ENDPOINTS DE AUTH
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _getStoredToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
+        // ✅ VERIFICAR SI ES UN ENDPOINT DE AUTENTICACIÓN
+        final isAuthEndpoint = options.path.contains('/auth/login') ||
+            options.path.contains('/auth/register');
+
+        if (!isAuthEndpoint) {
+          // Solo agregar token si NO es un endpoint de autenticación
+          final token = await _getStoredToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+            print('🎫 Token agregado a request: ${options.path}');
+          } else {
+            print('⚠️ No hay token disponible para: ${options.path}');
+          }
+        } else {
+          print('🔓 Endpoint de auth detectado, NO enviando token: ${options.path}');
+          // Remover cualquier header de Authorization que pueda existir
+          options.headers.remove('Authorization');
         }
+
         print('🚀 ${options.method} ${options.path}');
         handler.next(options);
       },
@@ -44,6 +60,7 @@ class HttpService {
         // Si recibe 401, eliminar token y redirigir al login
         if (error.response?.statusCode == 401) {
           await _removeStoredToken();
+          print('🗑️ Token eliminado por 401');
         }
         handler.next(error);
       },
@@ -61,7 +78,7 @@ class HttpService {
     }
   }
 
-  // MÉTODOS MOVIDOS DENTRO DE LA CLASE ✅
+  // MÉTODOS PRIVADOS PARA MANEJO DE TOKEN
   Future<String?> _getStoredToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(AppConfig.tokenKey);
@@ -70,11 +87,21 @@ class HttpService {
   Future<void> _removeStoredToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConfig.tokenKey);
+    await prefs.remove(AppConfig.userIdKey); // También remover user ID
   }
 
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConfig.tokenKey, token);
+    print('💾 Token guardado correctamente');
+  }
+
+  // ✅ MÉTODO PARA LIMPIAR TODOS LOS DATOS DE SESIÓN
+  Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConfig.tokenKey);
+    await prefs.remove(AppConfig.userIdKey);
+    print('🧹 Sesión limpiada completamente');
   }
 
   // GET request
@@ -120,7 +147,9 @@ class HttpService {
         return 'Timeout de conexión. Verifica tu conexión a internet.';
       case DioExceptionType.badResponse:
         if (error.response?.statusCode == 401) {
-          return 'Credenciales inválidas';
+          return 'Credenciales inválidas o sesión expirada';
+        } else if (error.response?.statusCode == 403) {
+          return 'Acceso denegado. Verifica tus permisos.';
         } else if (error.response?.statusCode == 404) {
           return 'Recurso no encontrado';
         } else if (error.response?.statusCode == 500) {
@@ -137,6 +166,7 @@ class HttpService {
   // Método para probar la conexión al backend
   Future<bool> testConnection() async {
     try {
+      // ✅ USAR UN ENDPOINT PÚBLICO PARA PROBAR CONEXIÓN
       final response = await _dio.get('/auth/users');
       return response.statusCode == 200;
     } catch (e) {

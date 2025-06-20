@@ -12,6 +12,8 @@ class AuthAuthenticated extends AuthState {
 
 class AuthUnauthenticated extends AuthState {}
 
+class RegisterSuccess extends AuthState {}
+
 class AuthError extends AuthState {
   final String message;
 

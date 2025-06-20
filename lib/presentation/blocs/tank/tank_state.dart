@@ -1,3 +1,4 @@
+// lib/presentation/blocs/tank/tank_state.dart
 import 'package:waterguard/domain/entities/tank.dart';
 import 'package:waterguard/domain/entities/water_quality.dart';
 
@@ -6,6 +7,11 @@ abstract class TankState {}
 class TankInitial extends TankState {}
 
 class TankLoading extends TankState {}
+
+class TankUpdateSuccess extends TankState {}
+
+// --- NUEVA FUNCIONALIDAD: Estado para eliminación exitosa ---
+class TankDeleteSuccess extends TankState {}
 
 class TankDetailLoaded extends TankState {
   final Tank tank;
@@ -21,6 +27,5 @@ class TankDetailLoaded extends TankState {
 
 class TankError extends TankState {
   final String message;
-
   TankError(this.message);
 }
