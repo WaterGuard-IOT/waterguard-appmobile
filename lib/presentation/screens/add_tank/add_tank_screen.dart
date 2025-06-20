@@ -270,90 +270,92 @@ class _AddTankScreenState extends State<AddTankScreen> with TickerProviderStateM
 
           const SizedBox(height: 48),
 
-          // Botón principal con animación
+          // Botón principal con animación (CORREGIDO)
           AnimatedBuilder(
             animation: _scaleAnimation,
             builder: (context, child) {
               return Transform.scale(
                 scale: _scaleAnimation.value,
-                child: Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: state is AddTankLoading
-                          ? [Colors.grey, Colors.grey.shade600]
-                          : [
-                        Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withOpacity(0.8),
+                child: GestureDetector(
+                  onTapDown: state is AddTankLoading ? null : (_) => _animationController.forward(),
+                  onTapUp: state is AddTankLoading ? null : (_) => _animationController.reverse(),
+                  onTapCancel: state is AddTankLoading ? null : () => _animationController.reverse(),
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: state is AddTankLoading
+                            ? [Colors.grey, Colors.grey.shade600]
+                            : [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.8),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (state is AddTankLoading
+                              ? Colors.grey
+                              : Theme.of(context).primaryColor).withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
                       ],
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (state is AddTankLoading
-                            ? Colors.grey
-                            : Theme.of(context).primaryColor).withOpacity(0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
+                    child: ElevatedButton(
+                      onPressed: state is AddTankLoading ? null : _createTank,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: state is AddTankLoading ? null : _createTank,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      child: state is AddTankLoading
+                          ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Text(
+                            'Creando Tanque...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )
+                          : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_circle,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Crear Tanque',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    onTapDown: state is AddTankLoading ? null : (_) => _animationController.forward(),
-                    onTapUp: state is AddTankLoading ? null : (_) => _animationController.reverse(),
-                    onTapCancel: state is AddTankLoading ? null : () => _animationController.reverse(),
-                    child: state is AddTankLoading
-                        ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Text(
-                          'Creando Tanque...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    )
-                        : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.add_circle,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Crear Tanque',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),

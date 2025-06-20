@@ -2,6 +2,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/data/models/backend_models.dart';
+import 'package:waterguard/presentation/blocs/add_tank/add_tank_event.dart';
+import 'package:waterguard/presentation/blocs/add_tank/add_tank_state.dart';
 
 class AddTankBloc extends Bloc<AddTankEvent, AddTankState> {
   final TankService tankService;

@@ -37,7 +37,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Botón para cambiar el tema
           BlocBuilder<ThemeBloc, ThemeState>(
             builder: (context, state) {
-              // Utiliza el estado del bloc para determinar qué icono mostrar
               return IconButton(
                 icon: Icon(
                   state.isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
@@ -45,7 +44,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 tooltip: state.isDarkMode ? 'Modo claro' : 'Modo oscuro',
                 onPressed: () {
-                  // Envía el evento ToggleTheme al bloc
                   context.read<ThemeBloc>().add(ToggleTheme());
                 },
               );
@@ -101,6 +99,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return const Center(child: Text('Cargando...'));
         },
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).pushNamed(AppRouter.addTank);
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Agregar Tanque'),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0, // Dashboard seleccionado
         items: const [
@@ -150,15 +157,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const SizedBox(height: 16),
 
-            // Título de la sección de tanques
-            Text(
-              'Mis Tanques',
-              style: Theme.of(context).textTheme.headlineSmall,
+            // Título de la sección de tanques con botón de agregar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Mis Tanques',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                if (state.tanks.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(AppRouter.addTank);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Agregar'),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
 
-            // Lista de tanques
-            ...state.tanks.map((tank) => _buildTankCard(context, tank)),
+            // Lista de tanques o mensaje cuando no hay tanques
+            if (state.tanks.isEmpty)
+              _buildEmptyTanksState(context)
+            else
+              ...state.tanks.map((tank) => _buildTankCard(context, tank)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyTanksState(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(32.0),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.water_drop_outlined,
+                size: 40,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No hay tanques registrados',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Comienza agregando tu primer tanque de agua para monitorear sus niveles en tiempo real.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed(AppRouter.addTank);
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Agregar Mi Primer Tanque'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -241,7 +331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: isDarkMode ? 8 : 4, // Más elevación en modo oscuro
+      elevation: isDarkMode ? 8 : 4,
       shadowColor: isDarkMode
           ? Colors.black.withOpacity(0.5)
           : Colors.grey.withOpacity(0.2),
@@ -474,13 +564,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'normal':
-        return const Color(0xFF4CAF50); // Verde más consistente
+        return const Color(0xFF4CAF50);
       case 'warning':
-        return const Color(0xFFFF9800); // Naranja más visible
+        return const Color(0xFFFF9800);
       case 'critical':
-        return const Color(0xFFF44336); // Rojo más consistente
+        return const Color(0xFFF44336);
       default:
-        return const Color(0xFF9E9E9E); // Gris neutro
+        return const Color(0xFF9E9E9E);
     }
   }
 
@@ -499,11 +589,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Color _getWaterLevelColor(double percentage) {
     if (percentage < 20) {
-      return const Color(0xFFF44336); // Rojo crítico
+      return const Color(0xFFF44336);
     } else if (percentage < 50) {
-      return const Color(0xFFFF9800); // Naranja advertencia
+      return const Color(0xFFFF9800);
     } else {
-      return const Color(0xFF2196F3); // Azul óptimo
+      return const Color(0xFF2196F3);
     }
   }
 
@@ -519,11 +609,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Colors.grey;
     }
   }
-
-  Color _getContrastingTextColor(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-  }
-
 }

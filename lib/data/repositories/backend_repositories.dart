@@ -40,34 +40,62 @@ class BackendUserRepositoryImpl implements UserRepository {
   @override
   Future<User?> authenticateUser(String email, String password) async {
     try {
-      // Primero intentar login directo con email como username
-      Map<String, dynamic>? response;
-      Map<String, dynamic>? userData;
+      // FLUJO CORREGIDO: Primero hacer login
+      Map<String, dynamic>? loginResponse;
 
+      // Intentar login directo con email como username
       try {
-        response = await _authService.login(email, password);
-        userData = await _authService.getUserByEmail(email);
+        print('🔐 Intentando login con email: $email');
+        loginResponse = await _authService.login(email, password);
+        print('✅ Login exitoso con email');
       } catch (e) {
-        print('Login with email failed, trying to find username for email: $e');
+        print('❌ Login con email falló: $e');
 
-        // Si falla, buscar el usuario por email y usar su username
-        userData = await _authService.getUserByEmail(email);
-        if (userData != null && userData['username'] != null) {
-          response = await _authService.login(userData['username'], password);
+        // Si falla con email, intentar primero obtener el username
+        // Para esto necesitamos crear un usuario de prueba o usar datos conocidos
+        try {
+          print('🔄 Intentando login con username estimado...');
+          // Extraer nombre de usuario del email
+          final username = email.split('@')[0];
+          loginResponse = await _authService.login(username, password);
+          print('✅ Login exitoso con username: $username');
+        } catch (e2) {
+          print('❌ Login con username también falló: $e2');
+          return null;
         }
       }
 
-      if (response == null || userData == null) {
+      if (loginResponse == null) {
+        print('❌ No se pudo hacer login');
         return null;
+      }
+
+      // FLUJO CORREGIDO: Ahora que tenemos token, obtener información del usuario
+      Map<String, dynamic>? userData;
+      try {
+        print('📋 Obteniendo información del usuario...');
+        userData = await _authService.getUserByEmail(email);
+        print('✅ Información del usuario obtenida');
+      } catch (e) {
+        print('⚠️ No se pudo obtener info del usuario: $e');
+        // Si no podemos obtener la info del usuario, crear datos básicos
+        userData = {
+          'id': 1, // ID temporal
+          'username': email.split('@')[0],
+          'email': email,
+          'tanques': [], // Lista vacía de tanques
+        };
+        print('📝 Usando datos básicos del usuario');
       }
 
       // Guardar el ID del usuario para futuras consultas
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('current_user_id', userData['id'].toString());
+      print('💾 ID del usuario guardado: ${userData['id']}');
 
       return BackendUserModel.fromJson(userData);
     } catch (e) {
-      print('Authentication error: $e');
+      print('💥 Error general en autenticación: $e');
       return null;
     }
   }

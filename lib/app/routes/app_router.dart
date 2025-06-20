@@ -1,4 +1,4 @@
-// lib/app/routes/app_router.dart (actualizado)
+// lib/app/routes/app_router.dart (corregido)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -8,13 +8,16 @@ import 'package:waterguard/presentation/screens/splash/splash_screen.dart';
 import 'package:waterguard/presentation/screens/tank_detail/tank_detail_screen.dart';
 import 'package:waterguard/presentation/screens/alerts/alerts_screen.dart';
 import 'package:waterguard/presentation/screens/settings/settings_screen.dart';
+import 'package:waterguard/presentation/screens/add_tank/add_tank_screen.dart';
 import 'package:waterguard/presentation/blocs/tank/tank_bloc.dart';
 import 'package:waterguard/presentation/blocs/settings/settings_bloc.dart';
+import 'package:waterguard/presentation/blocs/add_tank/add_tank_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_state.dart';
 import 'package:waterguard/domain/repositories/tank_repository.dart';
 import 'package:waterguard/domain/repositories/water_quality_repository.dart';
 import 'package:waterguard/domain/repositories/user_settings_repository.dart';
+import 'package:waterguard/data/services/tank_service.dart';
 
 class AppRouter {
   static const String splash = '/';
@@ -23,21 +26,22 @@ class AppRouter {
   static const String tankDetail = '/tank-detail';
   static const String alerts = '/alerts';
   static const String settings = '/settings';
+  static const String addTank = '/add-tank';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final getIt = GetIt.instance;
 
     switch (settings.name) {
-      case splash:
+      case '/':
         return MaterialPageRoute(builder: (_) => const SplashScreen());
 
-      case login:
+      case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
 
-      case dashboard:
+      case '/dashboard':
         return MaterialPageRoute(builder: (_) => const DashboardScreen());
 
-      case tankDetail:
+      case '/tank-detail':
         final tankId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (context) => BlocProvider(
@@ -49,8 +53,18 @@ class AppRouter {
           ),
         );
 
-      case alerts:
+      case '/alerts':
         return MaterialPageRoute(builder: (_) => const AlertsScreen());
+
+      case '/add-tank':
+        return MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (context) => AddTankBloc(
+              tankService: getIt<TankService>(),
+            ),
+            child: const AddTankScreen(),
+          ),
+        );
 
       case '/settings':
         return MaterialPageRoute(
