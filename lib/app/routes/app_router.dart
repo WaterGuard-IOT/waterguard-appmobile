@@ -1,8 +1,9 @@
-// lib/app/routes/app_router.dart (corregido)
+// lib/app/routes/app_router.dart (actualizado)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:waterguard/presentation/screens/auth/login_screen.dart';
+import 'package:waterguard/presentation/screens/auth/register_screen.dart';
 import 'package:waterguard/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:waterguard/presentation/screens/splash/splash_screen.dart';
 import 'package:waterguard/presentation/screens/tank_detail/tank_detail_screen.dart';
@@ -22,6 +23,7 @@ import 'package:waterguard/data/services/tank_service.dart';
 class AppRouter {
   static const String splash = '/';
   static const String login = '/login';
+  static const String register = '/register'; // ✅ NUEVA RUTA
   static const String dashboard = '/dashboard';
   static const String tankDetail = '/tank-detail';
   static const String alerts = '/alerts';
@@ -37,6 +39,9 @@ class AppRouter {
 
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
+
+      case '/register': // ✅ NUEVA RUTA
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
 
       case '/dashboard':
         return MaterialPageRoute(builder: (_) => const DashboardScreen());

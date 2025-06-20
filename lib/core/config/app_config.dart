@@ -1,3 +1,4 @@
+// lib/core/config/app_config.dart - COMPLETO
 class AppConfig {
   // URL del backend desplegado
   static const String baseUrl = 'https://172.178.70.242/api';
@@ -14,7 +15,7 @@ class AppConfig {
   static const String appName = 'WaterGuard';
   static const String appVersion = '1.0.0';
 
-  // Configuración de autenticación
+  // ✅ CONFIGURACIÓN DE AUTENTICACIÓN COMPLETA
   static const String tokenKey = 'auth_token';
   static const String userIdKey = 'current_user_id';
 
@@ -32,6 +33,10 @@ class AppConfig {
   static String tankByIdEndpoint(String tankId) => '/tanque/$tankId';
   static String tankQualityEndpoint(String tankId) => '/tanque/$tankId/calidad';
   static String tankLevelEndpoint(String tankId) => '/tanque/$tankId/nivel';
+
+  // ✅ ENDPOINTS DE ALERTAS
+  static const String alertsEndpoint = '/alertas';
+  static String alertsByTankEndpoint(String tankId) => '/alertas/tanque/$tankId';
 }
 
 // Clase para manejar diferentes entornos
@@ -63,4 +68,16 @@ class EnvironmentConfig {
   }
 
   static bool get enableLogging => Environment.isDevelopment;
+
+  // ✅ CONFIGURACIÓN DE SEGURIDAD
+  static List<String> get publicEndpoints => [
+    '/auth/login',
+    '/auth/register',
+    '/v3/api-docs',
+    '/swagger-ui',
+  ];
+
+  static bool isPublicEndpoint(String path) {
+    return publicEndpoints.any((endpoint) => path.contains(endpoint));
+  }
 }

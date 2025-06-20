@@ -1,4 +1,4 @@
-// lib/presentation/blocs/auth/auth_bloc.dart - REEMPLAZAR TODO EL CONTENIDO
+// lib/presentation/blocs/auth/auth_bloc.dart - ACTUALIZADO
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/domain/repositories/user_repository.dart';
 import 'package:waterguard/data/services/auth_service.dart';
@@ -7,11 +7,11 @@ import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserRepository userRepository;
-  final AuthService? authService;
+  final AuthService authService; // ✅ YA NO ES OPCIONAL
 
   AuthBloc({
     required this.userRepository,
-    this.authService,
+    required this.authService, // ✅ REQUERIDO
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
@@ -47,38 +47,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ) async {
     emit(AuthLoading());
     try {
-      if (authService == null) {
-        emit(AuthError('Servicio de autenticación no disponible'));
-        return;
-      }
+      print('🔄 Iniciando registro para: ${event.email}');
 
       // Registrar el usuario usando el servicio del backend
-      final result = await authService!.register(
+      final result = await authService.register(
         event.username,
         event.email,
         event.password,
       );
 
+      print('✅ Registro completado: $result');
+
       if (result.isNotEmpty) {
         emit(RegisterSuccess());
+        print('🎉 Usuario registrado exitosamente');
       } else {
         emit(AuthError('Error al crear la cuenta. Intenta de nuevo.'));
         emit(AuthUnauthenticated());
       }
     } catch (e) {
+      print('❌ Error en registro: $e');
       String errorMessage = 'Error al crear la cuenta: ';
 
       // Manejar errores específicos del backend
-      if (e.toString().contains('already exists') ||
-          e.toString().contains('duplicate') ||
-          e.toString().contains('ya existe')) {
+      final errorString = e.toString().toLowerCase();
+
+      if (errorString.contains('already exists') ||
+          errorString.contains('duplicate') ||
+          errorString.contains('ya existe') ||
+          errorString.contains('username') ||
+          errorString.contains('email')) {
         errorMessage = 'El usuario o email ya está registrado';
-      } else if (e.toString().contains('invalid email') ||
-          e.toString().contains('email inválido')) {
+      } else if (errorString.contains('invalid email') ||
+          errorString.contains('email inválido')) {
         errorMessage = 'El formato del email es inválido';
-      } else if (e.toString().contains('password') ||
-          e.toString().contains('contraseña')) {
+      } else if (errorString.contains('password') ||
+          errorString.contains('contraseña')) {
         errorMessage = 'La contraseña no cumple con los requisitos';
+      } else if (errorString.contains('connection') ||
+          errorString.contains('timeout') ||
+          errorString.contains('network')) {
+        errorMessage = 'Error de conexión. Verifica tu internet.';
       } else {
         errorMessage += e.toString();
       }
@@ -93,7 +102,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       Emitter<AuthState> emit,
       ) async {
     emit(AuthLoading());
-    // Aquí podrías agregar lógica para limpiar tokens o sesiones
-    emit(AuthUnauthenticated());
+
+    try {
+      // ✅ USAR EL MÉTODO DE LOGOUT DEL AUTH SERVICE
+      await authService.logout();
+
+      emit(AuthUnauthenticated());
+      print('✅ Sesión cerrada exitosamente');
+    } catch (e) {
+      print('❌ Error al cerrar sesión: $e');
+      // Aún así cerrar sesión localmente
+      emit(AuthUnauthenticated());
+    }
   }
 }

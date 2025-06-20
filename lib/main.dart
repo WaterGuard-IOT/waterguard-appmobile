@@ -1,3 +1,4 @@
+// lib/main.dart - ACTUALIZADO
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waterguard/app/app.dart';
@@ -30,7 +31,7 @@ void main() async {
   await mockDataProvider.init();
 
   //setupDependencies(mockDataProvider);
-  setupBackendDependencies();
+  setupBackendDependencies(); // ✅ Usando backend
 
   runApp(const WaterGuardApp());
 }

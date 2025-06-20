@@ -1,5 +1,4 @@
-// Repositorios que se conectan al backend
-
+// lib/data/repositories/backend_repositories.dart - ERROR userData CORREGIDO
 import 'package:waterguard/data/services/auth_service.dart';
 import 'package:waterguard/data/services/tank_service.dart';
 import 'package:waterguard/domain/entities/user.dart';
@@ -24,12 +23,24 @@ class BackendUserRepositoryImpl implements UserRepository {
   Future<User?> getUserById(String id) async {
     try {
       final users = await _authService.getUsers();
-      final userData = users.firstWhere(
-            (user) => user['id'].toString() == id,
-        orElse: () => null,
-      );
 
-      if (userData == null) return null;
+      // Buscar el usuario por ID de forma segura
+      Map<String, dynamic>? userData;
+      try {
+        userData = users.firstWhere(
+              (user) => user['id'].toString() == id,
+        );
+      } catch (e) {
+        print('Usuario con ID $id no encontrado');
+        return null;
+      }
+
+      // ✅ VERIFICACIÓN EXPLÍCITA ANTES DE USAR userData
+      if (userData == null) {
+        print('Error: userData es null para ID $id');
+        return null;
+      }
+
       return BackendUserModel.fromJson(userData);
     } catch (e) {
       print('Error getting user by id: $e');
@@ -40,7 +51,6 @@ class BackendUserRepositoryImpl implements UserRepository {
   @override
   Future<User?> authenticateUser(String email, String password) async {
     try {
-      // FLUJO CORREGIDO: Primero hacer login
       Map<String, dynamic>? loginResponse;
 
       // Intentar login directo con email como username
@@ -51,11 +61,9 @@ class BackendUserRepositoryImpl implements UserRepository {
       } catch (e) {
         print('❌ Login con email falló: $e');
 
-        // Si falla con email, intentar primero obtener el username
-        // Para esto necesitamos crear un usuario de prueba o usar datos conocidos
+        // Si falla con email, intentar con username
         try {
           print('🔄 Intentando login con username estimado...');
-          // Extraer nombre de usuario del email
           final username = email.split('@')[0];
           loginResponse = await _authService.login(username, password);
           print('✅ Login exitoso con username: $username');
@@ -65,12 +73,13 @@ class BackendUserRepositoryImpl implements UserRepository {
         }
       }
 
-      if (loginResponse == null) {
-        print('❌ No se pudo hacer login');
+      // Verificar que tenemos respuesta válida
+      if (loginResponse == null || loginResponse.isEmpty) {
+        print('❌ No se pudo hacer login - respuesta vacía');
         return null;
       }
 
-      // FLUJO CORREGIDO: Ahora que tenemos token, obtener información del usuario
+      // Obtener información del usuario
       Map<String, dynamic>? userData;
       try {
         print('📋 Obteniendo información del usuario...');
@@ -78,14 +87,21 @@ class BackendUserRepositoryImpl implements UserRepository {
         print('✅ Información del usuario obtenida');
       } catch (e) {
         print('⚠️ No se pudo obtener info del usuario: $e');
+
         // Si no podemos obtener la info del usuario, crear datos básicos
-        userData = {
-          'id': 1, // ID temporal
+        userData = <String, dynamic>{  // ✅ TIPO EXPLÍCITO NO-NULLABLE
+          'id': 1,
           'username': email.split('@')[0],
           'email': email,
-          'tanques': [], // Lista vacía de tanques
+          'tanques': <Map<String, dynamic>>[], // Lista explícitamente tipada
         };
         print('📝 Usando datos básicos del usuario');
+      }
+
+      // ✅ VERIFICACIÓN EXPLÍCITA ANTES DE USAR userData
+      if (userData == null) {
+        print('❌ No se pudo obtener datos del usuario después de login');
+        return null;
       }
 
       // Guardar el ID del usuario para futuras consultas
@@ -104,13 +120,29 @@ class BackendUserRepositoryImpl implements UserRepository {
   Future<List<User>> getUsersManagingTank(String tankId) async {
     try {
       final users = await _authService.getUsers();
-      return users
-          .where((user) {
-        final tanques = user['tanques'] as List?;
-        return tanques?.any((tanque) => tanque['id'].toString() == tankId) ?? false;
-      })
-          .map((userData) => BackendUserModel.fromJson(userData))
-          .toList();
+      final List<User> managingUsers = [];
+
+      for (final userData in users) {
+        // ✅ VERIFICACIÓN EXPLÍCITA DE userData
+        if (userData == null) continue;
+
+        // Verificación segura de la existencia de 'tanques'
+        final tanques = userData['tanques'];
+        if (tanques != null && tanques is List) {
+          final hasTank = tanques.any((tanque) {
+            if (tanque != null && tanque is Map<String, dynamic>) {
+              return tanque['id']?.toString() == tankId;
+            }
+            return false;
+          });
+
+          if (hasTank) {
+            managingUsers.add(BackendUserModel.fromJson(userData));
+          }
+        }
+      }
+
+      return managingUsers;
     } catch (e) {
       print('Error getting users managing tank: $e');
       return [];
@@ -120,12 +152,15 @@ class BackendUserRepositoryImpl implements UserRepository {
   // Método adicional para crear datos de prueba
   Future<User?> createTestUser() async {
     try {
-      return await _authService.createTestUserIfNeeded().then((userData) {
-        if (userData != null) {
-          return BackendUserModel.fromJson(userData);
-        }
+      final userData = await _authService.createTestUserIfNeeded();
+
+      // ✅ VERIFICACIÓN EXPLÍCITA ANTES DE USAR userData
+      if (userData == null) {
+        print('❌ No se pudo crear usuario de prueba');
         return null;
-      });
+      }
+
+      return BackendUserModel.fromJson(userData);
     } catch (e) {
       print('Error creating test user: $e');
       return null;
@@ -143,14 +178,17 @@ class BackendTankRepositoryImpl implements TankRepository {
   @override
   Future<List<Tank>> getTanks() async {
     try {
-      // Obtener el ID del usuario actual
       final prefs = await SharedPreferences.getInstance();
       final userIdString = prefs.getString('current_user_id');
 
-      if (userIdString == null) return [];
+      if (userIdString == null) {
+        print('No hay usuario logueado');
+        return [];
+      }
 
       final userId = int.parse(userIdString);
       final tanksData = await _tankService.getTanksByUser(userId);
+
       return tanksData
           .map((data) => BackendTankModel.fromJson(data))
           .toList();
@@ -191,7 +229,6 @@ class BackendWaterQualityRepositoryImpl implements WaterQualityRepository {
   @override
   Future<List<WaterQuality>> getWaterQualityReadings() async {
     try {
-      // Obtener todos los tanques y sus datos de calidad
       final prefs = await SharedPreferences.getInstance();
       final userIdString = prefs.getString('current_user_id');
 
@@ -202,9 +239,14 @@ class BackendWaterQualityRepositoryImpl implements WaterQualityRepository {
       final List<WaterQuality> qualities = [];
 
       for (var tankData in tanksData) {
-        if (tankData['calidad'] != null) {
+        // ✅ VERIFICACIÓN EXPLÍCITA DE tankData
+        if (tankData == null) continue;
+
+        // Verificación segura de la existencia de 'calidad'
+        final calidadData = tankData['calidad'];
+        if (calidadData != null && calidadData is Map<String, dynamic>) {
           final quality = BackendWaterQualityModel.fromJson(
-            tankData['calidad'],
+            calidadData,
             tankData['id'].toString(),
           );
           qualities.add(quality);
@@ -224,12 +266,19 @@ class BackendWaterQualityRepositoryImpl implements WaterQualityRepository {
       final tankIdInt = int.parse(tankId);
       final tankData = await _tankService.getTankById(tankIdInt);
 
-      if (tankData['calidad'] == null) return null;
+      // ✅ VERIFICACIÓN EXPLÍCITA DE tankData
+      if (tankData == null) {
+        print('Error: tankData es null para tank ID $tankId');
+        return null;
+      }
 
-      return BackendWaterQualityModel.fromJson(
-        tankData['calidad'],
-        tankId,
-      );
+      // Verificación segura de la existencia de 'calidad'
+      final calidadData = tankData['calidad'];
+      if (calidadData == null || calidadData is! Map<String, dynamic>) {
+        return null;
+      }
+
+      return BackendWaterQualityModel.fromJson(calidadData, tankId);
     } catch (e) {
       print('Error getting water quality for tank: $e');
       return null;
@@ -238,25 +287,32 @@ class BackendWaterQualityRepositoryImpl implements WaterQualityRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getHistoricalData(String tankId) async {
-    // El backend actual no tiene datos históricos, generamos algunos ficticios
-    // pero basados en datos reales del tanque si están disponibles
     try {
       final tankIdInt = int.parse(tankId);
       final tankData = await _tankService.getTankById(tankIdInt);
+
+      // ✅ VERIFICACIÓN EXPLÍCITA DE tankData
+      if (tankData == null) {
+        print('Error: tankData es null para historical data tank ID $tankId');
+        return _generateFallbackHistoricalData();
+      }
 
       final List<Map<String, dynamic>> historicalData = [];
       final now = DateTime.now();
 
       // Obtener el nivel actual si existe
       double baseLevel = 500.0; // Nivel base por defecto
-      if (tankData['nivel'] != null && tankData['nivel']['porcentaje'] != null) {
-        baseLevel = 1000.0 * (tankData['nivel']['porcentaje'] / 100.0);
+      final nivelData = tankData['nivel'];
+      if (nivelData != null && nivelData is Map<String, dynamic>) {
+        final porcentaje = nivelData['porcentaje'];
+        if (porcentaje != null && porcentaje is num) {
+          baseLevel = 1000.0 * (porcentaje / 100.0);
+        }
       }
 
       // Generar datos históricos simulados basados en el nivel actual
       for (int i = 6; i >= 0; i--) {
         final date = now.subtract(Duration(days: i));
-        // Variar el nivel alrededor del nivel base
         final variation = (i % 3 == 0 ? -50 : 50) + (i * 10);
         final level = (baseLevel + variation).clamp(100.0, 1000.0);
 
@@ -269,22 +325,26 @@ class BackendWaterQualityRepositoryImpl implements WaterQualityRepository {
       return historicalData;
     } catch (e) {
       print('Error getting historical data: $e');
-      // Fallback a datos completamente ficticios
-      final List<Map<String, dynamic>> historicalData = [];
-      final now = DateTime.now();
-
-      for (int i = 6; i >= 0; i--) {
-        final date = now.subtract(Duration(days: i));
-        final level = 400 + (i * 50) + (i % 2 == 0 ? 100 : 50);
-
-        historicalData.add({
-          'timestamp': date.toIso8601String(),
-          'level': level,
-        });
-      }
-
-      return historicalData;
+      return _generateFallbackHistoricalData();
     }
+  }
+
+  // ✅ MÉTODO HELPER PARA DATOS FALLBACK
+  List<Map<String, dynamic>> _generateFallbackHistoricalData() {
+    final List<Map<String, dynamic>> historicalData = [];
+    final now = DateTime.now();
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final level = 400 + (i * 50) + (i % 2 == 0 ? 100 : 50);
+
+      historicalData.add({
+        'timestamp': date.toIso8601String(),
+        'level': level,
+      });
+    }
+
+    return historicalData;
   }
 }
 

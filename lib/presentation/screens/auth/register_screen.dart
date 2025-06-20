@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/register_screen.dart
+// lib/presentation/screens/auth/register_screen.dart - OPTIMIZADO
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
@@ -90,8 +90,22 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
         ),
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
-            if (state is AuthAuthenticated) {
-              Navigator.of(context).pushReplacementNamed(AppRouter.dashboard);
+            if (state is RegisterSuccess) {
+              // ✅ NAVEGACIÓN MEJORADA DESPUÉS DEL REGISTRO
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('¡Registro exitoso! Ya puedes iniciar sesión.'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+
+              // Navegar al login después de un pequeño delay
+              Future.delayed(const Duration(seconds: 1), () {
+                if (mounted) {
+                  Navigator.of(context).pushReplacementNamed(AppRouter.login);
+                }
+              });
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -100,15 +114,6 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                   behavior: SnackBarBehavior.floating,
                 ),
               );
-            } else if (state is RegisterSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('¡Registro exitoso! Ya puedes iniciar sesión.'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              Navigator.of(context).pushReplacementNamed(AppRouter.login);
             }
           },
           child: SafeArea(
@@ -189,6 +194,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                   }
                                   if (value.length < 3) {
                                     return 'El nombre de usuario debe tener al menos 3 caracteres';
+                                  }
+                                  // ✅ VALIDACIÓN MEJORADA
+                                  if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                                    return 'Solo se permiten letras, números y guiones bajos';
                                   }
                                   return null;
                                 },
@@ -443,6 +452,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
 
   void _register() {
     if (_formKey.currentState!.validate()) {
+      print('🔄 Iniciando proceso de registro...');
       context.read<AuthBloc>().add(
         RegisterRequested(
           username: _usernameController.text.trim(),
