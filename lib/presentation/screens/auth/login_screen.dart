@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/login_screen.dart - CON PANEL DE DEBUG
+// lib/presentation/screens/auth/login_screen.dart - CORREGIDO PARA USERNAME
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -16,15 +16,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
-  bool _showDebugPanel = false; // ✅ CONTROL PANEL DEBUG
+  bool _showDebugPanel = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -35,7 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         title: const Text('WaterGuard Login'),
         actions: [
-          // ✅ BOTÓN DE DEBUG
           IconButton(
             icon: Icon(_showDebugPanel ? Icons.bug_report : Icons.bug_report_outlined),
             tooltip: 'Panel de Debug',
@@ -66,10 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
-                // ✅ PANEL DE DEBUG (TEMPORAL)
                 if (_showDebugPanel) _buildDebugPanel(),
-
-                // Formulario principal
                 _buildMainLoginForm(),
               ],
             ),
@@ -79,7 +75,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ✅ PANEL DE DEBUG TEMPORAL
   Widget _buildDebugPanel() {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -107,7 +102,46 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Botón para verificar usuarios existentes
+          // Botón para crear usuario de prueba
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final authService = GetIt.instance<AuthService>();
+                try {
+                  await authService.register('testuser', 'test@waterguard.com', 'password123');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Usuario de prueba creado: testuser'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  // Auto-llenar formulario
+                  _usernameController.text = 'testuser';
+                  _passwordController.text = 'password123';
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Usuario ya existe o error: $e'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  // Aún así llenar el formulario por si ya existía
+                  _usernameController.text = 'testuser';
+                  _passwordController.text = 'password123';
+                }
+              },
+              icon: const Icon(Icons.science),
+              label: const Text('Crear Usuario de Prueba'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Botón para verificar usuarios
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -123,92 +157,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
-
-          // ✅ NUEVO BOTÓN PARA DEBUGGEAR jp@gmail.com ESPECÍFICAMENTE
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final authService = GetIt.instance<AuthService>();
-                await authService.debugSpecificUser('jp@gmail.com');
-              },
-              icon: const Icon(Icons.search),
-              label: const Text('Debug jp@gmail.com'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Botón para crear usuario de prueba
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final authService = GetIt.instance<AuthService>();
-                final result = await authService.setupTestUserAndLogin();
-                if (result != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Usuario de prueba listo y login exitoso'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  // Actualizar estado de autenticación
-                  context.read<AuthBloc>().add(LoginRequested(
-                    email: 'test@waterguard.com',
-                    password: 'WaterGuard2024!',
-                  ));
-                }
-              },
-              icon: const Icon(Icons.science),
-              label: const Text('Setup Usuario de Prueba'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Botón para crear usuario jp
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final authService = GetIt.instance<AuthService>();
-                final success = await authService.createSpecificTestUser(
-                  'jp_user',
-                  'jp@gmail.com',
-                  'jp1234',
-                );
-
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Usuario jp@gmail.com creado/verificado'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                  // Auto-llenar formulario
-                  _emailController.text = 'jp@gmail.com';
-                  _passwordController.text = 'jp1234';
-                }
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text('Crear Usuario jp@gmail.com'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
           const SizedBox(height: 12),
 
-          // Información
+          // Información sobre el login
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -227,10 +178,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '1. Presiona "Ver Usuarios Existentes" para ver qué usuarios hay\n'
-                      '2. Presiona "Debug jp@gmail.com" para ver el USERNAME real del usuario\n'
-                      '3. Presiona "Setup Usuario de Prueba" para crear y hacer login automático\n'
-                      '4. O presiona "Crear Usuario jp@gmail.com" para tu usuario específico',
+                  '1. El backend requiere USERNAME (no email) para login\n'
+                      '2. Crea un usuario de prueba con el botón verde\n'
+                      '3. Usa "testuser" y "password123" para hacer login\n'
+                      '4. El campo ahora pide USERNAME en lugar de email',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.blue.shade700,
@@ -301,26 +252,28 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 48),
 
-          // Campos de formulario
+          // Campo USERNAME (cambiado de email)
           TextFormField(
-            controller: _emailController,
+            controller: _usernameController,
             decoration: const InputDecoration(
-              labelText: 'Correo electrónico',
-              prefixIcon: Icon(Icons.email),
+              labelText: 'Nombre de usuario',
+              prefixIcon: Icon(Icons.person),
               border: OutlineInputBorder(),
+              helperText: 'Ingresa tu nombre de usuario (no email)',
             ),
-            keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu correo electrónico';
+                return 'Por favor ingresa tu nombre de usuario';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Por favor ingresa un correo válido';
+              if (value.length < 3) {
+                return 'El username debe tener al menos 3 caracteres';
               }
               return null;
             },
           ),
           const SizedBox(height: 16),
+
+          // Campo contraseña
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
@@ -382,9 +335,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? null
                       : () {
                     if (_formKey.currentState!.validate()) {
+                      // Ahora enviamos username directamente
                       context.read<AuthBloc>().add(
                         LoginRequested(
-                          email: _emailController.text,
+                          email: _usernameController.text, // Reutilizamos el campo email pero enviamos username
                           password: _passwordController.text,
                         ),
                       );

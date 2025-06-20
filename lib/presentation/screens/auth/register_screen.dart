@@ -1,4 +1,4 @@
-// lib/presentation/screens/auth/register_screen.dart - OPTIMIZADO
+// lib/presentation/screens/auth/register_screen.dart - OPTIMIZADO PARA USERNAME
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/presentation/blocs/auth/auth_bloc.dart';
@@ -91,16 +91,14 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is RegisterSuccess) {
-              // ✅ NAVEGACIÓN MEJORADA DESPUÉS DEL REGISTRO
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('¡Registro exitoso! Ya puedes iniciar sesión.'),
+                  content: Text('¡Registro exitoso! Ya puedes iniciar sesión con tu username.'),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
 
-              // Navegar al login después de un pequeño delay
               Future.delayed(const Duration(seconds: 1), () {
                 if (mounted) {
                   Navigator.of(context).pushReplacementNamed(AppRouter.login);
@@ -133,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Logo y título con animación
+                              // Logo y título
                               Hero(
                                 tag: 'waterguard_logo',
                                 child: Container(
@@ -183,19 +181,45 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                               ),
                               const SizedBox(height: 48),
 
+                              // Información importante sobre username
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, color: Colors.blue.shade700),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'El username será usado para iniciar sesión. Elige uno fácil de recordar.',
+                                        style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
                               // Campo Username
                               _buildTextField(
                                 controller: _usernameController,
                                 label: 'Nombre de usuario',
                                 icon: Icons.person_outline,
+                                helperText: 'Usarás este username para iniciar sesión',
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Por favor ingresa tu nombre de usuario';
                                   }
                                   if (value.length < 3) {
-                                    return 'El nombre de usuario debe tener al menos 3 caracteres';
+                                    return 'El username debe tener al menos 3 caracteres';
                                   }
-                                  // ✅ VALIDACIÓN MEJORADA
+                                  if (value.length > 20) {
+                                    return 'El username no puede tener más de 20 caracteres';
+                                  }
                                   if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
                                     return 'Solo se permiten letras, números y guiones bajos';
                                   }
@@ -210,6 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                 label: 'Correo electrónico',
                                 icon: Icons.email_outlined,
                                 keyboardType: TextInputType.emailAddress,
+                                helperText: 'Para notificaciones y recuperación de cuenta',
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Por favor ingresa tu correo electrónico';
@@ -228,6 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                 label: 'Contraseña',
                                 icon: Icons.lock_outline,
                                 obscureText: !_isPasswordVisible,
+                                helperText: 'Mínimo 6 caracteres',
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -402,6 +428,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
     Widget? suffixIcon,
+    String? helperText,
     String? Function(String?)? validator,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -421,6 +448,8 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
+          helperText: helperText,
+          helperMaxLines: 2,
           prefixIcon: Icon(
             icon,
             color: Theme.of(context).primaryColor,
@@ -438,6 +467,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
           ),
           labelStyle: TextStyle(
             color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade600,
+          ),
+          helperStyle: TextStyle(
+            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+            fontSize: 12,
           ),
         ),
         keyboardType: keyboardType,

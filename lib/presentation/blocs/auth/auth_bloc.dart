@@ -1,4 +1,4 @@
-// lib/presentation/blocs/auth/auth_bloc.dart - ACTUALIZADO
+// lib/presentation/blocs/auth/auth_bloc.dart - ACTUALIZADO PARA USERNAME
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:waterguard/domain/repositories/user_repository.dart';
 import 'package:waterguard/data/services/auth_service.dart';
@@ -7,11 +7,11 @@ import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserRepository userRepository;
-  final AuthService authService; // ✅ YA NO ES OPCIONAL
+  final AuthService authService;
 
   AuthBloc({
     required this.userRepository,
-    required this.authService, // ✅ REQUERIDO
+    required this.authService,
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
@@ -24,19 +24,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ) async {
     emit(AuthLoading());
     try {
+      print('🔄 Procesando login para: ${event.email}');
+
+      // NOTA: Aunque el campo se llama 'email' en el evento por compatibilidad,
+      // ahora puede contener username o email
       final user = await userRepository.authenticateUser(
-        event.email,
+        event.email, // Puede ser username o email
         event.password,
       );
 
       if (user != null) {
+        print('✅ Login exitoso para usuario: ${user.name}');
         emit(AuthAuthenticated(user.id));
       } else {
-        emit(AuthError('Credenciales inválidas. Por favor intenta de nuevo.'));
+        print('❌ Login falló - credenciales inválidas');
+        emit(AuthError('Credenciales inválidas. Verifica tu username y contraseña.'));
         emit(AuthUnauthenticated());
       }
     } catch (e) {
-      emit(AuthError('Error al iniciar sesión: ${e.toString()}'));
+      print('❌ Error en login: $e');
+
+      String errorMessage = 'Error al iniciar sesión: ';
+      final errorString = e.toString().toLowerCase();
+
+      if (errorString.contains('401') || errorString.contains('unauthorized')) {
+        errorMessage = 'Username o contraseña incorrectos';
+      } else if (errorString.contains('connection') ||
+          errorString.contains('timeout') ||
+          errorString.contains('network')) {
+        errorMessage = 'Error de conexión. Verifica tu internet.';
+      } else if (errorString.contains('server') || errorString.contains('500')) {
+        errorMessage = 'Error del servidor. Intenta más tarde.';
+      } else {
+        errorMessage += 'Verifica tus credenciales e intenta de nuevo.';
+      }
+
+      emit(AuthError(errorMessage));
       emit(AuthUnauthenticated());
     }
   }
@@ -47,7 +70,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ) async {
     emit(AuthLoading());
     try {
-      print('🔄 Iniciando registro para: ${event.email}');
+      print('🔄 Iniciando registro para username: ${event.username}');
 
       // Registrar el usuario usando el servicio del backend
       final result = await authService.register(
@@ -69,7 +92,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       print('❌ Error en registro: $e');
       String errorMessage = 'Error al crear la cuenta: ';
 
-      // Manejar errores específicos del backend
       final errorString = e.toString().toLowerCase();
 
       if (errorString.contains('already exists') ||
@@ -104,9 +126,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
 
     try {
-      // ✅ USAR EL MÉTODO DE LOGOUT DEL AUTH SERVICE
       await authService.logout();
-
       emit(AuthUnauthenticated());
       print('✅ Sesión cerrada exitosamente');
     } catch (e) {
